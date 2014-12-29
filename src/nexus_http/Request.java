@@ -40,18 +40,22 @@ public class Request
 		if (parametersStartAt >= 0)
 		{
 			pathPart = request.getRequestLine().getUri().substring(0, parametersStartAt);
-			parameterPart = request.getRequestLine().getUri().substring(parametersStartAt);
+			parameterPart = request.getRequestLine().getUri().substring(parametersStartAt + 1);
 		}
 		else
 		{
 			pathPart = request.getRequestLine().getUri();
 			parameterPart = new String();
 		}
-		this.path = pathPart.substring(pathPart.indexOf('/')).split("/");
+		this.path = pathPart.substring(pathPart.indexOf('/') + 1).split("/");
+		//this.path = pathPart.split("/");
 		
 		this.parameters = new HashMap<>();
 		for (String keyValuePair : parameterPart.split("\\&"))
 		{
+			if (keyValuePair.isEmpty())
+				continue;
+			
 			int keyValueSeparatedAt = keyValuePair.indexOf('=');
 			
 			if (keyValueSeparatedAt >= 0)
@@ -87,6 +91,22 @@ public class Request
 		this.method = method;
 		this.path = path;
 		this.parameters = new HashMap<>();
+	}
+	
+	
+	// IMPLEMENTED METHODS	-----------------------
+	
+	@Override
+	public String toString()
+	{
+		String uri = new String();
+		for (String pathPart : this.path)
+		{
+			uri += "/" + pathPart;
+		}
+		uri += createParameterString(this.parameters);
+		
+		return uri;
 	}
 	
 	
@@ -143,14 +163,7 @@ public class Request
 	 */
 	public HttpRequest toHttpRequest()
 	{
-		String uri = new String();
-		for (String pathPart : this.path)
-		{
-			uri += "/" + pathPart;
-		}
-		uri += createParameterString(this.parameters);
-		
-		return new BasicHttpRequest(this.method.toString(), uri);
+		return new BasicHttpRequest(this.method.toString(), this.toString());
 	}
 	
 	private static String createParameterString(Map<String, String> parameterValues)

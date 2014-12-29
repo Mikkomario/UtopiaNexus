@@ -88,7 +88,7 @@ public class Server
 		try
 		{
 			this.lastRequestThread = new RequestListenerThread(this.port, service, null);
-			this.lastRequestThread.setDaemon(false);
+			this.lastRequestThread.setDaemon(true);
 	        this.lastRequestThread.start();
 		}
 		catch (IOException e)
