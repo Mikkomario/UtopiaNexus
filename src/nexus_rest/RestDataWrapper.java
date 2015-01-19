@@ -2,6 +2,8 @@ package nexus_rest;
 
 import java.util.Map;
 
+import nexus_http.NotFoundException;
+
 /**
  * RestDataWrapper holds a single attribute key value and is used for presenting limited 
  * data wrapped in a restEntity.
@@ -45,11 +47,10 @@ public class RestDataWrapper extends SimpleRestEntity
 	}
 	
 	@Override
-	public RestEntity getEntity(String pathPart)
+	public RestEntity getEntity(String pathPart) throws NotFoundException
 	{
 		// Wrappers don't have any entities under them since they 
 		// already represent an attribute
-		// TODO: Again, throw exception
-		return null;
+		throw new NotFoundException(getPath() + pathPart);
 	}
 }

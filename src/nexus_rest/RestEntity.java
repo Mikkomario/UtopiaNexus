@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nexus_http.HttpException;
+import nexus_http.NotFoundException;
 import flow_recording.Constructable;
 import flow_recording.Writable;
 import flow_structure.TreeNode;
@@ -46,28 +48,28 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	
 	// ABSTRACT METHODS	---------------------------
 	
-	// TODO: Throw an exception if POST fails
 	/**
 	 * Creates a new restEntity under this entity using the given construction data.
 	 * @param parameters The parameters that are used in entity construction.
 	 * @return The entity that was just created
+	 * @throws HttpException If the operation couldn't succeed due to an error in the request
 	 */
-	public abstract RestEntity Post(Map<String, String> parameters);
+	public abstract RestEntity Post(Map<String, String> parameters) throws HttpException;
 	
-	// TODO: Throw exceptions on parse issues or other problems
 	/**
 	 * Changes some attributes in the entity
 	 * @param parameters The parameters that are to be adjusted
+	 * @throws HttpException If the operation couldn't succeed due to an error in the request
 	 */
-	public abstract void Put(Map<String, String> parameters);
+	public abstract void Put(Map<String, String> parameters) throws HttpException;
 	
-	// TODO: Again, throw exceptions
 	/**
 	 * Makes the necessary changes before the entity is destroyed. The entity won't be 
 	 * destroyed if an exception is thrown.
 	 * @param parameters The parameters that are used in destroying the entity.
+	 * @throws HttpException If the operation couldn't succeed due to an error in the request
 	 */
-	protected abstract void prepareDelete(Map<String, String> parameters);
+	protected abstract void prepareDelete(Map<String, String> parameters) throws HttpException;
 	
 	
 	// IMPLEMENTED METHODS	------------------------
@@ -132,10 +134,10 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	/**
 	 * Deletes the entity if that's at all possible
 	 * @param parameters The parameters used when deleting the entity
+	 * @throws HttpException If the operation couldn't succeed due to an error in the request
 	 */
-	public void delete(Map<String, String> parameters)
+	public void delete(Map<String, String> parameters) throws HttpException
 	{
-		// TODO: Catch exceptions
 		prepareDelete(parameters);
 		setParent(null);
 	}
@@ -190,8 +192,9 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * Finds an entity in relation to this one
 	 * @param pathPart The name of the entity or the link to it
 	 * @return The entity along the path
+	 * @throws NotFoundException If the requested path couldn't be found
 	 */
-	public RestEntity getEntity(String pathPart)
+	public RestEntity getEntity(String pathPart) throws NotFoundException
 	{
 		// The entity may be a direct link
 		if (this.links.containsKey(pathPart))
@@ -208,23 +211,24 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		// Or a single attribute
 		if (getContent().getAttributes().containsKey(pathPart))
 			return new RestDataWrapper(pathPart, this);
-		
-		// TODO: Throw a not found exception
+
 		// TODO: Add support for '*' = "all", could also do one for '-' = "any"-
-		return null;
+		// Add support for "multiRequests" when this is working
+		throw new NotFoundException(getPath() + pathPart);
 	}
 	
 	/**
 	 * Finds a resource entity at the end of the given path
 	 * @param path The path to the final resource
 	 * @return The resource at the end of the path
+	 * @throws NotFoundException If the requested entity couldn't be found
 	 */
-	public RestEntity getEntity(String[] path)
+	public RestEntity getEntity(String[] path) throws NotFoundException
 	{
 		return getEntity(path, 0);
 	}
 	
-	private RestEntity getEntity(String[] path, int nextIndex)
+	private RestEntity getEntity(String[] path, int nextIndex) throws NotFoundException
 	{
 		if (nextIndex >= path.length)
 			return this;

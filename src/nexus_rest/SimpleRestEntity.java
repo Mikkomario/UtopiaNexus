@@ -2,6 +2,10 @@ package nexus_rest;
 
 import java.util.Map;
 
+import nexus_http.HttpException;
+import nexus_http.MethodNotSupportedException;
+import nexus_http.MethodType;
+
 /**
  * Simple restEntities don't limit any methods but don't enhance them either.
  * 
@@ -29,11 +33,9 @@ public class SimpleRestEntity extends RestEntity
 	// IMPLEMENTED METHODS	----------------------
 
 	@Override
-	public RestEntity Post(Map<String, String> parameters)
+	public RestEntity Post(Map<String, String> parameters) throws MethodNotSupportedException
 	{
-		// These entities can't post new entities since they don't know how
-		// TODO: Throw exception
-		return null;
+		throw new MethodNotSupportedException(MethodType.POST);
 	}
 
 	@Override
@@ -46,7 +48,7 @@ public class SimpleRestEntity extends RestEntity
 	}
 
 	@Override
-	protected void prepareDelete(Map<String, String> parameters)
+	protected void prepareDelete(Map<String, String> parameters) throws HttpException
 	{
 		// Deletes all the children
 		for (int i = 0; i < getChildAmount(); i++)
