@@ -17,7 +17,8 @@ import flow_structure.TreeNode;
  * @author Mikko Hilpinen
  * @since 31.12.2014
  */
-public class RestEntity extends TreeNode<RestData> implements Constructable<RestEntity>, Writable
+public abstract class RestEntity extends TreeNode<RestData> implements 
+		Constructable<RestEntity>, Writable
 {
 	// ATTRIBUTES	--------------------------------
 
@@ -41,6 +42,32 @@ public class RestEntity extends TreeNode<RestData> implements Constructable<Rest
 		this.links = new HashMap<>();
 		this.id = this.name;
 	}
+	
+	
+	// ABSTRACT METHODS	---------------------------
+	
+	// TODO: Throw an exception if POST fails
+	/**
+	 * Creates a new restEntity under this entity using the given construction data.
+	 * @param parameters The parameters that are used in entity construction.
+	 * @return The entity that was just created
+	 */
+	public abstract RestEntity Post(Map<String, String> parameters);
+	
+	// TODO: Throw exceptions on parse issues or other problems
+	/**
+	 * Changes some attributes in the entity
+	 * @param parameters The parameters that are to be adjusted
+	 */
+	public abstract void Put(Map<String, String> parameters);
+	
+	// TODO: Again, throw exceptions
+	/**
+	 * Makes the necessary changes before the entity is destroyed. The entity won't be 
+	 * destroyed if an exception is thrown.
+	 * @param parameters The parameters that are used in destroying the entity.
+	 */
+	protected abstract void prepareDelete(Map<String, String> parameters);
 	
 	
 	// IMPLEMENTED METHODS	------------------------
@@ -103,6 +130,17 @@ public class RestEntity extends TreeNode<RestData> implements Constructable<Rest
 	// OTHER METHODS	----------------------------------
 	
 	/**
+	 * Deletes the entity if that's at all possible
+	 * @param parameters The parameters used when deleting the entity
+	 */
+	public void delete(Map<String, String> parameters)
+	{
+		// TODO: Catch exceptions
+		prepareDelete(parameters);
+		setParent(null);
+	}
+	
+	/**
 	 * @return The names of the links this entity has
 	 */
 	public Set<String> getlinkNames()
@@ -137,11 +175,29 @@ public class RestEntity extends TreeNode<RestData> implements Constructable<Rest
 		return targets;
 	}
 	
-	public RestEntity get(String pathPart)
+	/**
+	 * @return The virtual path that leads to this resource
+	 */
+	public String getPath()
 	{
+		if (getParent() == null)
+			return getName();
+		else
+			return ((RestEntity) getParent()).getPath() + "/" + getName();
+	}
+	
+	/**
+	 * Finds an entity in relation to this one
+	 * @param pathPart The name of the entity or the link to it
+	 * @return The entity along the path
+	 */
+	public RestEntity getEntity(String pathPart)
+	{
+		// The entity may be a direct link
 		if (this.links.containsKey(pathPart))
 			return getLinkedEntity(pathPart);
 		
+		// Or a child entity
 		for (int i = 0; i < getChildAmount(); i++)
 		{
 			RestEntity child = (RestEntity) getChild(i);
@@ -149,7 +205,30 @@ public class RestEntity extends TreeNode<RestData> implements Constructable<Rest
 				return child;
 		}
 		
+		// Or a single attribute
+		if (getContent().getAttributes().containsKey(pathPart))
+			return new RestDataWrapper(pathPart, this);
+		
 		// TODO: Throw a not found exception
+		// TODO: Add support for '*' = "all", could also do one for '-' = "any"-
 		return null;
+	}
+	
+	/**
+	 * Finds a resource entity at the end of the given path
+	 * @param path The path to the final resource
+	 * @return The resource at the end of the path
+	 */
+	public RestEntity getEntity(String[] path)
+	{
+		return getEntity(path, 0);
+	}
+	
+	private RestEntity getEntity(String[] path, int nextIndex)
+	{
+		if (nextIndex >= path.length)
+			return this;
+		else
+			return getEntity(path[nextIndex]).getEntity(path, nextIndex + 1);
 	}
 }
