@@ -178,7 +178,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	}
 	
 	/**
-	 * @return The virtual path that leads to this resource
+	 * @return The virtual path that leads to this resource (doesn't include the first '/')
 	 */
 	public String getPath()
 	{

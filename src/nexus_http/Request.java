@@ -128,6 +128,14 @@ public class Request
 		return this.path.clone();
 	}
 	
+	/**
+	 * @return The parameters given with this request
+	 */
+	public Map<String, String> getParameters()
+	{
+		return this.parameters;
+	}
+	
 	
 	// OTHER METHODS	-------------------------
 	
