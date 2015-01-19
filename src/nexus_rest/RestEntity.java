@@ -139,6 +139,13 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	public void delete(Map<String, String> parameters) throws HttpException
 	{
 		prepareDelete(parameters);
+		
+		// Deletes all the children as well
+		for (int i = 0; i < getChildAmount(); i++)
+		{
+			((RestEntity) getChild(i)).delete(parameters);
+		}
+		
 		setParent(null);
 	}
 	
@@ -228,7 +235,15 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		return getEntity(path, 0);
 	}
 	
-	private RestEntity getEntity(String[] path, int nextIndex) throws NotFoundException
+	/**
+	 * Finds a resource entity at the end of the given path
+	 * @param path The path to the final resource
+	 * @param nextIndex The index of the pathPart that comes after this entity 
+	 * (0 if the entity is not on the path)
+	 * @return The resource at the end of the path
+	 * @throws NotFoundException If the requested entity couldn't be found
+	 */
+	public RestEntity getEntity(String[] path, int nextIndex) throws NotFoundException
 	{
 		if (nextIndex >= path.length)
 			return this;

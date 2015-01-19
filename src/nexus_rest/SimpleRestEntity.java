@@ -50,10 +50,6 @@ public class SimpleRestEntity extends RestEntity
 	@Override
 	protected void prepareDelete(Map<String, String> parameters) throws HttpException
 	{
-		// Deletes all the children
-		for (int i = 0; i < getChildAmount(); i++)
-		{
-			((RestEntity) getChild(i)).delete(parameters);
-		}
+		// No preparation required
 	}
 }
