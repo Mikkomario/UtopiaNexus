@@ -3,6 +3,4 @@ Nexus TODO
 EntityList -RESTEntity
 Client
 Väliaikaiset entiteetit
-abstrakti GET(parameters) RESTEntityyn
-RESTEntityjen printtaaminen XML:nä
 Decodaus ja encodaus requesteille

@@ -237,7 +237,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		
 		// Or a single attribute
 		if (getContent().getAttributes().containsKey(pathPart))
-			return new RestDataWrapper(pathPart, this);
+			return new RestAttributeWrapper(pathPart, this);
 
 		// TODO: Add support for '*' = "all", could also do one for '-' = "any"-
 		// Add support for "multiRequests" when this is working
