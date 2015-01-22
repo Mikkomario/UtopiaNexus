@@ -4,6 +4,7 @@ import java.util.Map;
 
 import nexus_http.HttpException;
 import nexus_http.InvalidParametersException;
+import nexus_http.NotFoundException;
 import nexus_rest.RestEntity;
 import nexus_rest.SimpleRestData;
 
@@ -54,5 +55,13 @@ public class TestRestEntity extends RestEntity
 			throws HttpException
 	{
 		// No preparation required
+	}
+
+	@Override
+	protected RestEntity getMissingEntity(String pathPart,
+			Map<String, String> parameters) throws NotFoundException
+	{
+		// Doesn't hold special entities
+		throw new NotFoundException(getPath() + "/" + pathPart);
 	}
 }

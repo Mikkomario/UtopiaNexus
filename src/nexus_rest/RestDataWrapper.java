@@ -47,7 +47,8 @@ public class RestDataWrapper extends SimpleRestEntity
 	}
 	
 	@Override
-	public RestEntity getEntity(String pathPart) throws NotFoundException
+	public RestEntity getEntity(String pathPart, Map<String, String> parameters) 
+			throws NotFoundException
 	{
 		// Wrappers don't have any entities under them since they 
 		// already represent an attribute

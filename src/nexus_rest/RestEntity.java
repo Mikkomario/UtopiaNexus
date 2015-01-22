@@ -38,6 +38,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 */
 	public RestEntity(String name, RestData content, RestEntity parent)
 	{
+		// TODO: Nullpointer
 		super(content, parent);
 		
 		this.name = name;
@@ -70,6 +71,16 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @throws HttpException If the operation couldn't succeed due to an error in the request
 	 */
 	protected abstract void prepareDelete(Map<String, String> parameters) throws HttpException;
+	
+	/**
+	 * Finds an entity that is not a child, a link or an attribute of this entity, if possible.
+	 * @param pathPart The name of the entity that should be reached
+	 * @param parameters The parameters provided by the client
+	 * @return The entity along the given path
+	 * @throws NotFoundException If the entity couldn't be found
+	 */
+	protected abstract RestEntity getMissingEntity(String pathPart, 
+			Map<String, String> parameters) throws NotFoundException;
 	
 	
 	// IMPLEMENTED METHODS	------------------------
@@ -198,10 +209,12 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	/**
 	 * Finds an entity in relation to this one
 	 * @param pathPart The name of the entity or the link to it
+	 * @param parameters The parameters provided by the client
 	 * @return The entity along the path
 	 * @throws NotFoundException If the requested path couldn't be found
 	 */
-	public RestEntity getEntity(String pathPart) throws NotFoundException
+	public RestEntity getEntity(String pathPart, Map<String, String> parameters) 
+			throws NotFoundException
 	{
 		// The entity may be a direct link
 		if (this.links.containsKey(pathPart))
@@ -221,18 +234,20 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 
 		// TODO: Add support for '*' = "all", could also do one for '-' = "any"-
 		// Add support for "multiRequests" when this is working
-		throw new NotFoundException(getPath() + pathPart);
+		return getMissingEntity(pathPart, parameters);
 	}
 	
 	/**
 	 * Finds a resource entity at the end of the given path
 	 * @param path The path to the final resource
+	 * @param parameters The parameters provided by the client
 	 * @return The resource at the end of the path
 	 * @throws NotFoundException If the requested entity couldn't be found
 	 */
-	public RestEntity getEntity(String[] path) throws NotFoundException
+	public RestEntity getEntity(String[] path, Map<String, String> parameters) 
+			throws NotFoundException
 	{
-		return getEntity(path, 0);
+		return getEntity(path, 0, parameters);
 	}
 	
 	/**
@@ -240,14 +255,17 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param path The path to the final resource
 	 * @param nextIndex The index of the pathPart that comes after this entity 
 	 * (0 if the entity is not on the path)
+	 * @param parameters The parameters provided by the client
 	 * @return The resource at the end of the path
 	 * @throws NotFoundException If the requested entity couldn't be found
 	 */
-	public RestEntity getEntity(String[] path, int nextIndex) throws NotFoundException
+	public RestEntity getEntity(String[] path, int nextIndex, Map<String, String> parameters) 
+			throws NotFoundException
 	{
 		if (nextIndex >= path.length)
 			return this;
 		else
-			return getEntity(path[nextIndex]).getEntity(path, nextIndex + 1);
+			return getEntity(path[nextIndex], parameters).getEntity(path, nextIndex + 1, 
+					parameters);
 	}
 }

@@ -7,6 +7,8 @@ import java.util.Set;
 import org.apache.http.HttpRequest;
 import org.apache.http.message.BasicHttpRequest;
 
+import flow_recording.ObjectFormatException;
+
 /**
  * Requests are events generated from HttpRequests
  * 
@@ -34,36 +36,7 @@ public class Request
 		this.method = 
 				MethodType.parseFromString(request.getRequestLine().getMethod().toString());
 		
-		int parametersStartAt = request.getRequestLine().getUri().indexOf('?');
-		
-		String pathPart, parameterPart;
-		if (parametersStartAt >= 0)
-		{
-			pathPart = request.getRequestLine().getUri().substring(0, parametersStartAt);
-			parameterPart = request.getRequestLine().getUri().substring(parametersStartAt + 1);
-		}
-		else
-		{
-			pathPart = request.getRequestLine().getUri();
-			parameterPart = new String();
-		}
-		this.path = pathPart.substring(pathPart.indexOf('/') + 1).split("/");
-		//this.path = pathPart.split("/");
-		
-		this.parameters = new HashMap<>();
-		for (String keyValuePair : parameterPart.split("\\&"))
-		{
-			if (keyValuePair.isEmpty())
-				continue;
-			
-			int keyValueSeparatedAt = keyValuePair.indexOf('=');
-			
-			if (keyValueSeparatedAt >= 0)
-				this.parameters.put(keyValuePair.substring(0, keyValueSeparatedAt), 
-						keyValuePair.substring(keyValueSeparatedAt + 1));
-			else
-				this.parameters.put(keyValuePair, new String());
-		}
+		initializePathAndParameters(request.getRequestLine().getUri());
 	}
 	
 	/**
@@ -91,6 +64,12 @@ public class Request
 		this.method = method;
 		this.path = path;
 		this.parameters = new HashMap<>();
+	}
+	
+	private Request(MethodType method, String uriAndParameters)
+	{
+		this.method = method;
+		initializePathAndParameters(uriAndParameters);
 	}
 	
 	
@@ -174,6 +153,26 @@ public class Request
 		return new BasicHttpRequest(this.method.toString(), this.toString());
 	}
 	
+	/**
+	 * Parses a new request from a string
+	 * @param s The string that can be parsed into a request the string should contain a 
+	 * method part followed by a whitespace and the uri and parameters. 
+	 * For example "GET server/1?parameter1=a&parameter2=b"
+	 * @return A request parsed from the string
+	 * @throws ObjectFormatException If the request couldn't be parsed from the given string
+	 */
+	public static Request parseFromString(String s) throws ObjectFormatException
+	{
+		String[] methodAndBody = s.split(" ");
+		
+		MethodType method = MethodType.parseFromString(methodAndBody[0]);
+		
+		if (method == null || methodAndBody.length < 2)
+			throw new ObjectFormatException("No method provided");
+		
+		return new Request(method, methodAndBody[1]);
+	}
+	
 	private static String createParameterString(Map<String, String> parameterValues)
 	{
 		String parameterString = "";
@@ -195,5 +194,39 @@ public class Request
 		}
 		
 		return parameterString;
+	}
+	
+	private void initializePathAndParameters(String uriAndParameters)
+	{
+		// Initializes attributes
+		int parametersStartAt = uriAndParameters.indexOf('?');
+		
+		String pathPart, parameterPart;
+		if (parametersStartAt >= 0)
+		{
+			pathPart = uriAndParameters.substring(0, parametersStartAt);
+			parameterPart = uriAndParameters.substring(parametersStartAt + 1);
+		}
+		else
+		{
+			pathPart = uriAndParameters;
+			parameterPart = new String();
+		}
+		this.path = pathPart.substring(pathPart.indexOf('/') + 1).split("/");
+		
+		this.parameters = new HashMap<>();
+		for (String keyValuePair : parameterPart.split("\\&"))
+		{
+			if (keyValuePair.isEmpty())
+				continue;
+			
+			int keyValueSeparatedAt = keyValuePair.indexOf('=');
+			
+			if (keyValueSeparatedAt >= 0)
+				this.parameters.put(keyValuePair.substring(0, keyValueSeparatedAt), 
+						keyValuePair.substring(keyValueSeparatedAt + 1));
+			else
+				this.parameters.put(keyValuePair, new String());
+		}
 	}
 }

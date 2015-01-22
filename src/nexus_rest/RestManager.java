@@ -50,12 +50,15 @@ public class RestManager implements RequestHandler
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
 			throws org.apache.http.HttpException, IOException
 	{
+		System.out.println("REST manager received a request");
+		
 		Request parsedRequest = new Request(request);
 		
 		// Finds the requested entity
 		try
 		{
-			RestEntity requested = this.root.getEntity(parsedRequest.getPath(), 1);
+			RestEntity requested = this.root.getEntity(parsedRequest.getPath(), 1, 
+					parsedRequest.getParameters());
 			
 			switch (parsedRequest.getMethod())
 			{
@@ -102,6 +105,7 @@ public class RestManager implements RequestHandler
 	@Override
 	public String getAcceptedPath()
 	{
-		return "/" + this.root.getName() + "/*";
+		return "/*";
+		//return "/" + this.root.getName() + "/*";
 	}
 }
