@@ -14,7 +14,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 
 import flow_io.XMLIOAccessor;
-import flow_recording.XMLObjectWriter;
 import nexus_http.HttpException;
 import nexus_http.Request;
 import nexus_http.RequestHandler;
@@ -30,6 +29,7 @@ public class RestManager implements RequestHandler
 	// ATTRIBUTES	--------------------------------
 	
 	private RestEntity root;
+	private String serverLink;
 	
 	
 	// CONSTRUCTOR	--------------------------------
@@ -37,10 +37,13 @@ public class RestManager implements RequestHandler
 	/**
 	 * Creates a new manager
 	 * @param root The root entity
+	 * @param serverLink The server part of the link, containing the server address, the port 
+	 * number and the first "/"
 	 */
-	public RestManager(RestEntity root)
+	public RestManager(RestEntity root, String serverLink)
 	{
 		this.root = root;
+		this.serverLink = serverLink;
 	}
 	
 	
@@ -64,14 +67,13 @@ public class RestManager implements RequestHandler
 			{
 				// For GET, parses the entity and sends the data
 				case GET:
-					// TODO: The entities may need to be parsed in a different manner but 
-					// for now we'll use the default xml writer
-					XMLObjectWriter objectWriter = new XMLObjectWriter();
 					ByteArrayOutputStream xml = new ByteArrayOutputStream();
 					XMLStreamWriter writer = XMLIOAccessor.createWriter(xml);
-					objectWriter.openDocument("result", writer);
-					objectWriter.writeInto(requested, writer);
-					objectWriter.closeDocument(writer);
+					XMLIOAccessor.writeDocumentStart("result", writer);
+					
+					requested.writeContent(this.serverLink, writer);
+					
+					XMLIOAccessor.writeDocumentEnd(writer);
 					XMLIOAccessor.closeWriter(writer);
 					
 					response.setEntity(new StringEntity(xml.toString(), ContentType.TEXT_XML));

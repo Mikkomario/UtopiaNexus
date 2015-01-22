@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
 import nexus_http.HttpException;
 import nexus_http.NotFoundException;
+import flow_io.XMLIOAccessor;
 import flow_recording.Constructable;
 import flow_recording.Writable;
 import flow_structure.TreeNode;
@@ -38,7 +42,6 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 */
 	public RestEntity(String name, RestData content, RestEntity parent)
 	{
-		// TODO: Nullpointer
 		super(content, parent);
 		
 		this.name = name;
@@ -125,9 +128,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			links.put(linkName, getLinkedEntity(linkName));
 		}
 		
-		for (int i = 0; i < getChildAmount(); i++)
+		for (RestEntity child : getChildren())
 		{
-			RestEntity child = (RestEntity) getChild(i);
 			links.put(child.getName(), child);
 		}
 		
@@ -158,9 +160,9 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		prepareDelete(parameters);
 		
 		// Deletes all the children as well
-		for (int i = 0; i < getChildAmount(); i++)
+		for (RestEntity child : getChildren())
 		{
-			((RestEntity) getChild(i)).delete(parameters);
+			child.delete(parameters);
 		}
 		
 		setParent(null);
@@ -227,9 +229,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			return getLinkedEntity(pathPart);
 		
 		// Or a child entity
-		for (int i = 0; i < getChildAmount(); i++)
+		for (RestEntity child : getChildren())
 		{
-			RestEntity child = (RestEntity) getChild(i);
 			if (child.getName().equals(pathPart))
 				return child;
 		}
@@ -273,5 +274,71 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		else
 			return getEntity(path[nextIndex], parameters).getEntity(path, nextIndex + 1, 
 					parameters);
+	}
+	
+	/**
+	 * Writes the entity content as xml data
+	 * @param serverLink The server part of the link, containing the server address, the port 
+	 * number and the first "/"
+	 * @param writer The writer that will write the object's data
+	 * @throws XMLStreamException If the writing failed
+	 */
+	public void writeContent(String serverLink, XMLStreamWriter writer) throws XMLStreamException
+	{
+		// Writes the entity element
+		writer.writeStartElement(getName());
+		writeLinkAsAttribute(serverLink, writer);
+		
+		// Writes the links
+		for (String link : getlinkNames())
+		{
+			writer.writeStartElement(link);
+			getLinkedEntity(link).writeLinkAsAttribute(serverLink, writer);
+			writer.writeEndElement();
+		}
+		// Writes the children
+		for (RestEntity child : getChildren())
+		{
+			writer.writeStartElement(child.getName());
+			child.writeLinkAsAttribute(serverLink, writer);
+			writer.writeEndElement();
+		}
+		// Writes the attributes
+		Map<String, String> attributes = getAttributes();
+		for (String attributeName : attributes.keySet())
+		{
+			XMLIOAccessor.writeElementWithData(attributeName, attributes.get(attributeName), 
+					writer);
+		}
+		
+		// TODO: Call a subclass to write their own stuff?
+		
+		writer.writeEndElement();
+	}
+	
+	/**
+	 * Writes a link to the entity as an attribute for the currently open element in the stream
+	 * @param serverLink The server part of the link, containing the server address, the port 
+	 * number and the first "/"
+	 * @param writer The writer that will write the attribute into the stream
+	 * @throws XMLStreamException If the attribute couldn't be written into the stream
+	 */
+	public void writeLinkAsAttribute(String serverLink, XMLStreamWriter writer) 
+			throws XMLStreamException
+	{
+		XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
+	}
+	
+	/**
+	 * @return List containing all the children of this entity
+	 */
+	protected List<RestEntity> getChildren()
+	{
+		List<RestEntity> children = new ArrayList<>();
+		for (int i = 0; i < getChildAmount(); i++)
+		{
+			children.add((RestEntity) getChild(i));
+		}
+		return children;
 	}
 }

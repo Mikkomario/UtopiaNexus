@@ -27,15 +27,27 @@ public class RestServerTest
 	
 	/**
 	 * Starts the test server. Type in 'exit' to quit
-	 * @param args Not used
+	 * @param args The first parameter is the server ip. The second parameter is the port number default is 7777)
 	 */
 	public static void main(String[] args)
 	{
-		Server server = new Server(7777);
-		server.addRequestHandler(new RestManager(new TestRestEntity("root", null)));
+		String address = "82.130.11.90";
+		int port = 7777;
+		
+		if (args.length > 0)
+			address = args[0];
+		if (args.length > 1)
+			port = Integer.parseInt(args[1]);
+		
+		String serverLink = "http://" + address + ":" + port + "/";
+		
+		Server server = new Server(port);
+		server.addRequestHandler(new RestManager(new TestRestEntity("root", null), serverLink));
 		server.start();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		
+		System.out.println("Server started. Access through: " + serverLink);
 		
 		while (true)
 		{

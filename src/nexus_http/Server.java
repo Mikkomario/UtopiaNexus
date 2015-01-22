@@ -62,7 +62,6 @@ public class Server
 	 */
 	public void addRequestHandler(RequestHandler handler)
 	{
-		System.out.println("Adds handler for path: " + handler.getAcceptedPath());
 		this.mapper.register(handler.getAcceptedPath(), handler);
 	}
 	
