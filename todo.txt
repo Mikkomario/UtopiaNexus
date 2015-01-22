@@ -1,6 +1,4 @@
 Nexus TODO
 
 EntityList -RESTEntity
-Client
-Väliaikaiset entiteetit
 Decodaus ja encodaus requesteille
