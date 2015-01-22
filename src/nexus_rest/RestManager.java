@@ -50,15 +50,15 @@ public class RestManager implements RequestHandler
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
 			throws org.apache.http.HttpException, IOException
 	{
-		System.out.println("REST manager received a request");
-		
 		Request parsedRequest = new Request(request);
 		
 		// Finds the requested entity
 		try
-		{
+		{	
 			RestEntity requested = this.root.getEntity(parsedRequest.getPath(), 1, 
 					parsedRequest.getParameters());
+			
+			//System.out.println("Target entity: " + requested.getPath());
 			
 			switch (parsedRequest.getMethod())
 			{
@@ -79,6 +79,11 @@ public class RestManager implements RequestHandler
 				// For POST, posts a new entity, returns a link to the new entity
 				case POST:
 					requested.Post(parsedRequest.getParameters());
+					break;
+				// For PUT, changes an attribute in the entity, returns a link to the 
+				// modified entity
+				case PUT:
+					requested.Put(parsedRequest.getParameters());
 					break;
 				// For DELETE, deletes the entity, returns a link to the entity above that
 				case DELETE:
@@ -106,6 +111,7 @@ public class RestManager implements RequestHandler
 	public String getAcceptedPath()
 	{
 		return "/*";
+		// TODO: Doesn't accept root but only elements under it
 		//return "/" + this.root.getName() + "/*";
 	}
 }

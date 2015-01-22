@@ -125,6 +125,12 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			links.put(linkName, getLinkedEntity(linkName));
 		}
 		
+		for (int i = 0; i < getChildAmount(); i++)
+		{
+			RestEntity child = (RestEntity) getChild(i);
+			links.put(child.getName(), child);
+		}
+		
 		return links;
 	}
 	

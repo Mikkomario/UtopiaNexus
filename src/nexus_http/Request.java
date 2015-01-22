@@ -212,7 +212,10 @@ public class Request
 			pathPart = uriAndParameters;
 			parameterPart = new String();
 		}
-		this.path = pathPart.substring(pathPart.indexOf('/') + 1).split("/");
+		if (pathPart.startsWith("/"))
+			this.path = pathPart.substring(1).split("/");
+		else
+			this.path = pathPart.split("/");
 		
 		this.parameters = new HashMap<>();
 		for (String keyValuePair : parameterPart.split("\\&"))
