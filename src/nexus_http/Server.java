@@ -66,6 +66,18 @@ public class Server
 	}
 	
 	/**
+	 * Adds a new handler to the request handlers informed about client requests. This can 
+	 * be used along with the {@link #addRequestHandler(RequestHandler)} when a single 
+	 * handler can handle multiple paths
+	 * @param handler The handler that will handle requests in this server
+	 * @param acceptedPath The request path the handler uses
+	 */
+	public void addRequestHandler(RequestHandler handler, String acceptedPath)
+	{
+		this.mapper.register(acceptedPath, handler);
+	}
+	
+	/**
 	 * The server starts listening to client requests
 	 */
 	public void start()

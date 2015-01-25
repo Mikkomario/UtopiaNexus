@@ -31,7 +31,7 @@ public class RestServerTest
 	 */
 	public static void main(String[] args)
 	{
-		String address = "82.130.11.90";
+		String address = "192.168.0.15";
 		int port = 7777;
 		
 		if (args.length > 0)
@@ -42,7 +42,9 @@ public class RestServerTest
 		String serverLink = "http://" + address + ":" + port + "/";
 		
 		Server server = new Server(port);
-		server.addRequestHandler(new RestManager(new TestRestEntity("root", null), serverLink));
+		RestManager restManager = new RestManager(new TestRestEntity("root", null), serverLink);
+		server.addRequestHandler(restManager);
+		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());
 		server.start();
 		
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

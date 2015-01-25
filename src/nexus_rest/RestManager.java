@@ -15,6 +15,7 @@ import org.apache.http.protocol.HttpContext;
 
 import flow_io.XMLIOAccessor;
 import nexus_http.HttpException;
+import nexus_http.InternalServerException;
 import nexus_http.Request;
 import nexus_http.RequestHandler;
 
@@ -61,8 +62,6 @@ public class RestManager implements RequestHandler
 			RestEntity requested = this.root.getEntity(parsedRequest.getPath(), 1, 
 					parsedRequest.getParameters());
 			
-			//System.out.println("Target entity: " + requested.getPath());
-			
 			switch (parsedRequest.getMethod())
 			{
 				// For GET, parses the entity and sends the data
@@ -80,6 +79,7 @@ public class RestManager implements RequestHandler
 					break;
 				// For POST, posts a new entity, returns a link to the new entity
 				case POST:
+					// TODO: Return a link to the entity.
 					requested.Post(parsedRequest.getParameters());
 					break;
 				// For PUT, changes an attribute in the entity, returns a link to the 
@@ -101,6 +101,14 @@ public class RestManager implements RequestHandler
 		{
 			response.setStatusCode(e.getStatusCode());
 			response.setEntity(new StringEntity(e.getMessage(), ContentType.TEXT_PLAIN));
+			
+			// For internal server errors, makes an error print as well
+			if (e instanceof InternalServerException)
+			{
+				System.err.println("Internal server error: " + e.getMessage());
+				e.printStackTrace();
+				System.err.println("Caused by request: " + parsedRequest);
+			}
 		}
 		catch(XMLStreamException e)
 		{
@@ -112,8 +120,20 @@ public class RestManager implements RequestHandler
 	@Override
 	public String getAcceptedPath()
 	{
-		return "/*";
+		//return "/*";
 		// TODO: Doesn't accept root but only elements under it
-		//return "/" + this.root.getName() + "/*";
+		return "/" + this.root.getName() + "/*";
+		// This must be done in a separate registration. Add support!
+	}
+	
+	
+	// OTHER METHODS	-------------------------
+	
+	/**
+	 * @return The path that is used when requesting the root entity itself
+	 */
+	public String getAdditionalAcceptedPath()
+	{
+		return "/" + this.root.getName();
 	}
 }
