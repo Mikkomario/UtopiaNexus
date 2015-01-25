@@ -42,10 +42,7 @@ public class SimpleRestEntity extends RestEntity
 	@Override
 	public void Put(Map<String, String> parameters)
 	{
-		for (String parameterName : parameters.keySet())
-		{
-			getContent().setAttribute(parameterName, parameters.get(parameterName));
-		}
+		defaultPut(parameters);
 	}
 
 	@Override

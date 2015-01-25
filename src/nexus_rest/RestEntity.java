@@ -109,7 +109,12 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	@Override
 	public void setLink(String linkName, RestEntity target)
 	{
-		this.links.put(linkName, target);
+		// This may also be used for adding a child entity, in which case the name starts 
+		// with "child"
+		if (linkName.startsWith("child"))
+			addChild(target);
+		else
+			this.links.put(linkName, target);
 	}
 
 	@Override
@@ -130,7 +135,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		
 		for (RestEntity child : getChildren())
 		{
-			links.put(child.getName(), child);
+			links.put("child" + child.getName(), child);
 		}
 		
 		return links;
@@ -340,5 +345,22 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			children.add((RestEntity) getChild(i));
 		}
 		return children;
+	}
+	
+	/**
+	 * This is the default solution that can be used with Put. It simply updates those 
+	 * attributes that have already been introduced. No checking is done for the validity of 
+	 * the attributes, that must be done before calling this method.
+	 * 
+	 * @param parameters The parameters the client has provided
+	 */
+	protected void defaultPut(Map<String, String> parameters)
+	{
+		Map<String, String> attributes = getAttributes();
+		for (String parameterName : parameters.keySet())
+		{
+			if (attributes.containsKey(parameterName))
+				setAttribute(parameterName, parameters.get(parameterName));
+		}
 	}
 }
