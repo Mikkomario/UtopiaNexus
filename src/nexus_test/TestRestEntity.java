@@ -4,9 +4,9 @@ import java.util.Map;
 
 import nexus_http.HttpException;
 import nexus_http.InvalidParametersException;
-import nexus_http.NotFoundException;
 import nexus_rest.RestEntity;
 import nexus_rest.SimpleRestData;
+import nexus_rest.SimpleRestEntity;
 
 /**
  * This class is used for testing the basic methods of restEntities
@@ -14,7 +14,7 @@ import nexus_rest.SimpleRestData;
  * @author Mikko Hilpinen
  * @since 19.1.2015
  */
-public class TestRestEntity extends RestEntity
+public class TestRestEntity extends SimpleRestEntity
 {
 	// CONSTRUCTOR	----------------------------------
 	
@@ -48,20 +48,5 @@ public class TestRestEntity extends RestEntity
 		{
 			getContent().setAttribute(parameterName, parameters.get(parameterName));
 		}
-	}
-
-	@Override
-	protected void prepareDelete(Map<String, String> parameters)
-			throws HttpException
-	{
-		// No preparation required
-	}
-
-	@Override
-	protected RestEntity getMissingEntity(String pathPart,
-			Map<String, String> parameters) throws NotFoundException
-	{
-		// Doesn't hold special entities
-		throw new NotFoundException(getPath() + "/" + pathPart);
 	}
 }

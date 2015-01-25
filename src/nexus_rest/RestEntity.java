@@ -10,7 +10,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import nexus_http.HttpException;
-import nexus_http.NotFoundException;
+import nexus_http.InvalidParametersException;
 import flow_io.XMLIOAccessor;
 import flow_recording.Constructable;
 import flow_recording.Writable;
@@ -80,10 +80,29 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param pathPart The name of the entity that should be reached
 	 * @param parameters The parameters provided by the client
 	 * @return The entity along the given path
-	 * @throws NotFoundException If the entity couldn't be found
+	 * @throws HttpException If the entity couldn't be found
 	 */
 	protected abstract RestEntity getMissingEntity(String pathPart, 
-			Map<String, String> parameters) throws NotFoundException;
+			Map<String, String> parameters) throws HttpException;
+	
+	/**
+	 * This method wraps the entities into an entityList of desired type
+	 * @param name The name of the list
+	 * @param parent The parent of the list
+	 * @param entities The entities should fill the list
+	 * @return A list with the given data
+	 */
+	protected abstract RestEntityList wrapIntoList(String name, RestEntity parent, 
+			List<RestEntity> entities);
+	
+	/**
+	 * This method should fetch all of the entities that are under this entity but not as 
+	 * links or children.
+	 * @param parameters The parameters provided by the client
+	 * @return A list containing all the restEntities under this entity but not those 
+	 * registered as links or children.
+	 */
+	protected abstract List<RestEntity> getMissingEntities(Map<String, String> parameters);
 	
 	
 	// IMPLEMENTED METHODS	------------------------
@@ -224,11 +243,15 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param pathPart The name of the entity or the link to it
 	 * @param parameters The parameters provided by the client
 	 * @return The entity along the path
-	 * @throws NotFoundException If the requested path couldn't be found
+	 * @throws HttpException If the requested path couldn't be found or another problem occurred
 	 */
 	public RestEntity getEntity(String pathPart, Map<String, String> parameters) 
-			throws NotFoundException
+			throws HttpException
 	{
+		// All children and links could be requested with "*"
+		if (pathPart.equals("*"))
+			return getAllEntities(parameters);
+		
 		// The entity may be a direct link
 		if (this.links.containsKey(pathPart))
 			return getLinkedEntity(pathPart);
@@ -244,8 +267,6 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		if (getContent().getAttributes().containsKey(pathPart))
 			return new RestAttributeWrapper(pathPart, this);
 
-		// TODO: Add support for '*' = "all", could also do one for '-' = "any"-
-		// Add support for "multiRequests" when this is working
 		return getMissingEntity(pathPart, parameters);
 	}
 	
@@ -254,10 +275,10 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param path The path to the final resource
 	 * @param parameters The parameters provided by the client
 	 * @return The resource at the end of the path
-	 * @throws NotFoundException If the requested entity couldn't be found
+	 * @throws HttpException If the requested entity couldn't be found
 	 */
 	public RestEntity getEntity(String[] path, Map<String, String> parameters) 
-			throws NotFoundException
+			throws HttpException
 	{
 		return getEntity(path, 0, parameters);
 	}
@@ -269,10 +290,10 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * (0 if the entity is not on the path)
 	 * @param parameters The parameters provided by the client
 	 * @return The resource at the end of the path
-	 * @throws NotFoundException If the requested entity couldn't be found
+	 * @throws HttpException If the requested entity couldn't be found
 	 */
 	public RestEntity getEntity(String[] path, int nextIndex, Map<String, String> parameters) 
-			throws NotFoundException
+			throws HttpException
 	{
 		if (nextIndex >= path.length)
 			return this;
@@ -316,7 +337,14 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 					writer);
 		}
 		
-		// TODO: Call a subclass to write their own stuff?
+		// Writes the missing entities
+		for (RestEntity entity : getMissingEntities(new HashMap<>()))
+		{
+			// TODO: WETWET
+			writer.writeStartElement(entity.getName());
+			entity.writeLinkAsAttribute(serverLink, writer);
+			writer.writeEndElement();
+		}
 		
 		writer.writeEndElement();
 	}
@@ -362,5 +390,27 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			if (attributes.containsKey(parameterName))
 				setAttribute(parameterName, parameters.get(parameterName));
 		}
+	}
+	
+	private RestEntityList getAllEntities(Map<String, String> parameters) throws 
+			InvalidParametersException
+	{
+		RestEntityList entities = new SimpleRestEntityList("*", this, getLinkedEntities());
+		
+		for (RestEntity child : getChildren())
+		{
+			entities.addEntity(child);
+		}
+		
+		for (RestEntity entity : getMissingEntities(parameters))
+		{
+			entities.addEntity(entity);
+		}
+		
+		// Modifies the list a bit
+		entities.trim(parameters);
+		entities.adjustSizeWithParameters(parameters);
+		
+		return entities;
 	}
 }

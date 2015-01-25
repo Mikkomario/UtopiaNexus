@@ -1,5 +1,7 @@
 package nexus_rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import nexus_http.HttpException;
@@ -15,8 +17,6 @@ import nexus_http.NotFoundException;
  */
 public class SimpleRestEntity extends RestEntity
 {
-	// TODO: Is this really required?
-	
 	// CONSTRUCTOR	-------------------------------
 	
 	/**
@@ -34,13 +34,13 @@ public class SimpleRestEntity extends RestEntity
 	// IMPLEMENTED METHODS	----------------------
 
 	@Override
-	public RestEntity Post(Map<String, String> parameters) throws MethodNotSupportedException
+	public RestEntity Post(Map<String, String> parameters) throws HttpException
 	{
 		throw new MethodNotSupportedException(MethodType.POST);
 	}
 
 	@Override
-	public void Put(Map<String, String> parameters)
+	public void Put(Map<String, String> parameters) throws HttpException
 	{
 		defaultPut(parameters);
 	}
@@ -53,9 +53,22 @@ public class SimpleRestEntity extends RestEntity
 
 	@Override
 	protected RestEntity getMissingEntity(String pathPart,
-			Map<String, String> parameters) throws NotFoundException
+			Map<String, String> parameters) throws HttpException
 	{
 		// Simple RestEntities don't have any special entities beneath them
 		throw new NotFoundException(getPath() + "/" + pathPart);
+	}
+
+	@Override
+	protected RestEntityList wrapIntoList(String name, RestEntity parent,
+			List<RestEntity> entities)
+	{
+		return new SimpleRestEntityList(name, parent, entities);
+	}
+
+	@Override
+	protected List<RestEntity> getMissingEntities(Map<String, String> parameters)
+	{
+		return new ArrayList<RestEntity>();
 	}
 }

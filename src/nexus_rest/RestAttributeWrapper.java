@@ -1,5 +1,7 @@
 package nexus_rest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import nexus_http.HttpException;
@@ -73,5 +75,19 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 			Map<String, String> parameters) throws NotFoundException
 	{
 		throw new NotFoundException(getPath() + "/" + pathPart);
+	}
+
+	@Override
+	protected RestEntityList wrapIntoList(String name, RestEntity parent,
+			List<RestEntity> entities)
+	{
+		return new SimpleRestEntityList(name, parent, entities);
+	}
+
+	@Override
+	protected List<RestEntity> getMissingEntities(Map<String, String> parameters)
+	{
+		// There are no entities under attributes
+		return new ArrayList<>();
 	}
 }
