@@ -7,7 +7,10 @@ import java.io.InputStreamReader;
 
 import org.apache.http.HttpResponse;
 
+import flow_recording.ObjectFormatException;
 import nexus_http.Client;
+import nexus_http.NoConnectionException;
+import nexus_http.NoResponseException;
 import nexus_http.Request;
 
 /**
@@ -63,6 +66,19 @@ public class TestClient
 			catch (IOException e)
 			{
 				e.printStackTrace();
+			}
+			catch (ObjectFormatException e)
+			{
+				System.out.println(e.getMessage());
+			}
+			catch (NoConnectionException e)
+			{
+				System.out.println("No connection to the server. Exiting.");
+				break;
+			}
+			catch (NoResponseException e)
+			{
+				System.out.println("No response from the server");
 			}
 		}
 		

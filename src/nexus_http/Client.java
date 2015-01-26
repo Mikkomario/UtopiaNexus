@@ -64,8 +64,10 @@ public class Client
 	 * automatically if necessary.
 	 * @param request The request that will be sent to the server
 	 * @return The response given by the host or null if no response could be retrieved
+	 * @throws NoConnectionException If the server can't be reached
+	 * @throws NoResponseException If the server didn't respond
 	 */
-	public HttpResponse sendRequest(Request request)
+	public HttpResponse sendRequest(Request request) throws NoConnectionException, NoResponseException
 	{
 		// Initializes the connection statistics
 		HttpProcessor processor = HttpProcessorBuilder.create()
@@ -95,10 +97,7 @@ public class Client
 			}
 			catch (IOException e)
 			{
-				// TODO: Throw exception
-				System.err.println("Failed to connect to the server");
-				e.printStackTrace();
-				return null;
+				throw new NoConnectionException(e);
 			}
 		}
 		
@@ -120,11 +119,9 @@ public class Client
 			
 			return response;
 		}
-		// TODO: Throw exceptions instead
 		catch (NoHttpResponseException e)
 		{
-			System.err.println("No response for request " + request);
-			e.printStackTrace();
+			throw new NoResponseException(e);
 		}
 		catch (HttpException e)
 		{
