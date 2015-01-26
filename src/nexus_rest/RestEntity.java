@@ -10,7 +10,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import nexus_http.HttpException;
-import nexus_http.InvalidParametersException;
 import flow_io.XMLIOAccessor;
 import flow_recording.Constructable;
 import flow_recording.Writable;
@@ -101,8 +100,10 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param parameters The parameters provided by the client
 	 * @return A list containing all the restEntities under this entity but not those 
 	 * registered as links or children.
+	 * @throws HttpException If the missing entities can't be reached for some reason
 	 */
-	protected abstract List<RestEntity> getMissingEntities(Map<String, String> parameters);
+	protected abstract List<RestEntity> getMissingEntities(Map<String, String> parameters) 
+			throws HttpException;
 	
 	
 	// IMPLEMENTED METHODS	------------------------
@@ -308,8 +309,10 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * number and the first "/"
 	 * @param writer The writer that will write the object's data
 	 * @throws XMLStreamException If the writing failed
+	 * @throws HttpException If there was another problem during the write
 	 */
-	public void writeContent(String serverLink, XMLStreamWriter writer) throws XMLStreamException
+	public void writeContent(String serverLink, XMLStreamWriter writer) throws 
+			XMLStreamException, HttpException
 	{
 		// Writes the entity element
 		writer.writeStartElement(getName());
@@ -393,7 +396,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	}
 	
 	private RestEntityList getAllEntities(Map<String, String> parameters) throws 
-			InvalidParametersException
+			HttpException
 	{
 		RestEntityList entities = new SimpleRestEntityList("*", this, getLinkedEntities());
 		

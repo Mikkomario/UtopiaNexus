@@ -119,7 +119,7 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	
 	@Override
 	public void writeContent(String serverLink, XMLStreamWriter writer) throws 
-			XMLStreamException
+			XMLStreamException, HttpException
 	{
 		// Writes the content of each entity in row
 		for (RestEntity entity : this.entities)
