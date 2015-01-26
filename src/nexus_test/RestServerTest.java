@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import nexus_http.Server;
+import nexus_rest.RestEntity;
 import nexus_rest.RestManager;
 
 /**
@@ -15,6 +16,11 @@ import nexus_rest.RestManager;
  */
 public class RestServerTest
 {
+	// ATTRIBUTES	---------------------------
+	
+	private static RestEntity root = null;
+	
+	
 	// CONSTRUCTOR	---------------------------
 	
 	private RestServerTest()
@@ -42,8 +48,9 @@ public class RestServerTest
 		String serverLink = "http://" + address + ":" + port + "/";
 		
 		Server server = new Server(port);
-		RestManager restManager = new RestManager(new TestRestEntity("root", null), 
-				serverLink, true);
+		if (root == null)
+			root = new TestRestEntity("root", null);
+		RestManager restManager = new RestManager(root, serverLink, true);
 		server.addRequestHandler(restManager);
 		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());
 		server.start();
@@ -81,5 +88,17 @@ public class RestServerTest
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	
+	// OTHER METHODS	----------------------------
+	
+	/**
+	 * Sets the root element to the manager before it is created
+	 * @param newRoot The root that will be used in the tests
+	 */
+	public static void setRootEntity(RestEntity newRoot)
+	{
+		root = newRoot;
 	}
 }

@@ -29,7 +29,10 @@ public abstract class TemporaryRestEntity extends RestEntity
 	{
 		super(name, content, null);
 		
-		this.path = parent.getPath() + "/" + getName();
+		if (parent != null)
+			this.path = parent.getPath() + "/" + getName();
+		else
+			this.path = getName();
 	}
 	
 	
