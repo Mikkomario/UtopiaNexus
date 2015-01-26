@@ -1,5 +1,8 @@
 package nexus_http;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,14 +32,15 @@ public class Request
 	/**
 	 * Creates a new Request from the given HttpRequest
 	 * @param request The request this request is parsed from
+	 * @param encoded Is the request encoded (in UTF-8)
 	 */
-	public Request(HttpRequest request)
+	public Request(HttpRequest request, boolean encoded)
 	{
 		// Initializes attributes
 		this.method = 
 				MethodType.parseFromString(request.getRequestLine().getMethod().toString());
 		
-		initializePathAndParameters(request.getRequestLine().getUri());
+		initializePathAndParameters(request.getRequestLine().getUri(), encoded);
 	}
 	
 	/**
@@ -66,10 +70,10 @@ public class Request
 		this.parameters = new HashMap<>();
 	}
 	
-	private Request(MethodType method, String uriAndParameters)
+	private Request(MethodType method, String uriAndParameters, boolean encoded)
 	{
 		this.method = method;
-		initializePathAndParameters(uriAndParameters);
+		initializePathAndParameters(uriAndParameters, encoded);
 	}
 	
 	
@@ -146,11 +150,27 @@ public class Request
 	
 	/**
 	 * Creates a HttpRequest from this request instance
+	 * @param encode Should the request be encoded in UTF-8
 	 * @return The HttpRequest parsed from this request
 	 */
-	public HttpRequest toHttpRequest()
+	public HttpRequest toHttpRequest(boolean encode)
 	{
-		return new BasicHttpRequest(this.method.toString(), this.toString());
+		String uriLine = this.toString();
+		
+		if (encode)
+		{
+			try
+			{
+				uriLine = URLEncoder.encode(uriLine, "UTF-8");
+			}
+			catch (UnsupportedEncodingException e)
+			{
+				System.err.println("Can't encode request " + this);
+				e.printStackTrace();
+			}
+		}
+		
+		return new BasicHttpRequest(this.method.toString(), uriLine);
 	}
 	
 	/**
@@ -170,7 +190,7 @@ public class Request
 		if (method == null || methodAndBody.length < 2)
 			throw new ObjectFormatException("No method provided");
 		
-		return new Request(method, methodAndBody[1]);
+		return new Request(method, methodAndBody[1], false);
 	}
 	
 	private static String createParameterString(Map<String, String> parameterValues)
@@ -196,8 +216,21 @@ public class Request
 		return parameterString;
 	}
 	
-	private void initializePathAndParameters(String uriAndParameters)
+	private void initializePathAndParameters(String uriAndParameters, boolean decode)
 	{
+		if (decode)
+		{
+			try
+			{
+				uriAndParameters = URLDecoder.decode(uriAndParameters, "UTF-8");
+			}
+			catch (UnsupportedEncodingException e)
+			{
+				System.err.println("Can't decode line " + uriAndParameters);
+				e.printStackTrace();
+			}
+		}
+		
 		// Initializes attributes
 		int parametersStartAt = uriAndParameters.indexOf('?');
 		

@@ -2,6 +2,8 @@ package nexus_rest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -31,6 +33,7 @@ public class RestManager implements RequestHandler
 	
 	private RestEntity root;
 	private String serverLink;
+	private boolean useEncoding;
 	
 	
 	// CONSTRUCTOR	--------------------------------
@@ -40,11 +43,14 @@ public class RestManager implements RequestHandler
 	 * @param root The root entity
 	 * @param serverLink The server part of the link, containing the server address, the port 
 	 * number and the first "/"
+	 * @param useEncoding Should the manager expect to receive encoded requests. 
+	 * The used encoding is UTF-8.
 	 */
-	public RestManager(RestEntity root, String serverLink)
+	public RestManager(RestEntity root, String serverLink, boolean useEncoding)
 	{
 		this.root = root;
 		this.serverLink = serverLink;
+		this.useEncoding = useEncoding;
 	}
 	
 	
@@ -54,7 +60,10 @@ public class RestManager implements RequestHandler
 	public void handle(HttpRequest request, HttpResponse response, HttpContext context)
 			throws org.apache.http.HttpException, IOException
 	{
-		Request parsedRequest = new Request(request);
+		Request parsedRequest = new Request(request, this.useEncoding);
+		
+		ByteArrayOutputStream xml = null;
+		XMLStreamWriter writer = null;
 		
 		// Finds the requested entity
 		try
@@ -66,21 +75,30 @@ public class RestManager implements RequestHandler
 			{
 				// For GET, parses the entity and sends the data
 				case GET:
-					ByteArrayOutputStream xml = new ByteArrayOutputStream();
-					XMLStreamWriter writer = XMLIOAccessor.createWriter(xml);
+					writer = XMLIOAccessor.createWriter(xml);
+					xml = new ByteArrayOutputStream();
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					
 					requested.writeContent(this.serverLink, writer);
 					
 					XMLIOAccessor.writeDocumentEnd(writer);
-					XMLIOAccessor.closeWriter(writer);
-					
 					response.setEntity(new StringEntity(xml.toString(), ContentType.TEXT_XML));
 					break;
 				// For POST, posts a new entity, returns a link to the new entity
 				case POST:
-					// TODO: Return a link to the entity.
-					requested.Post(parsedRequest.getParameters());
+					// TODO: A bit WET
+					RestEntity newEntity = requested.Post(parsedRequest.getParameters());
+					
+					writer = XMLIOAccessor.createWriter(xml);
+					xml = new ByteArrayOutputStream();
+					XMLIOAccessor.writeDocumentStart("result", writer);
+					
+					writer.writeStartElement(newEntity.getName());
+					newEntity.writeLinkAsAttribute(this.serverLink, writer);
+					writer.writeEndElement();
+					
+					XMLIOAccessor.writeDocumentEnd(writer);
+					response.setEntity(new StringEntity(xml.toString(), ContentType.TEXT_XML));
 					break;
 				// For PUT, changes an attribute in the entity, returns a link to the 
 				// modified entity
@@ -115,15 +133,16 @@ public class RestManager implements RequestHandler
 			response.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 			e.printStackTrace();
 		}
+		finally
+		{
+			XMLIOAccessor.closeWriter(writer);
+		}
 	}
 
 	@Override
 	public String getAcceptedPath()
 	{
-		//return "/*";
-		// TODO: Doesn't accept root but only elements under it
-		return "/" + this.root.getName() + "/*";
-		// This must be done in a separate registration. Add support!
+		return "/" + encodeIfNecessary(this.root.getName() + "/*");
 	}
 	
 	
@@ -134,6 +153,24 @@ public class RestManager implements RequestHandler
 	 */
 	public String getAdditionalAcceptedPath()
 	{
-		return "/" + this.root.getName();
+		return "/" + encodeIfNecessary(this.root.getName());
+	}
+	
+	private String encodeIfNecessary(String s)
+	{
+		if (this.useEncoding)
+		{
+			try
+			{
+				return URLEncoder.encode(s, "UTF-8");
+			}
+			catch (UnsupportedEncodingException e)
+			{
+				System.err.println("Failed to encode the path");
+				e.printStackTrace();
+			}
+		}
+		
+		return s;
 	}
 }
