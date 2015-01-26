@@ -1,12 +1,11 @@
-package nexus_test;
+package nexus_rest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 import nexus_http.Server;
-import nexus_rest.RestEntity;
-import nexus_rest.RestManager;
+import nexus_test.TestRestEntity;
 
 /**
  * This class hosts a test server that contains rest entities
@@ -14,7 +13,7 @@ import nexus_rest.RestManager;
  * @author Mikko Hilpinen
  * @since 19.1.2015
  */
-public class RestServerTest
+public class StaticRestServer
 {
 	// ATTRIBUTES	---------------------------
 	
@@ -23,7 +22,7 @@ public class RestServerTest
 	
 	// CONSTRUCTOR	---------------------------
 	
-	private RestServerTest()
+	private StaticRestServer()
 	{
 		// The constructor is hidden since the interface is static
 	}
