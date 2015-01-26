@@ -183,14 +183,21 @@ public class Request
 	 */
 	public static Request parseFromString(String s) throws ObjectFormatException
 	{
-		String[] methodAndBody = s.split(" ");
+		if (s.indexOf(' ') == -1)
+			throw new ObjectFormatException("The request must consist of both method and body");
 		
-		MethodType method = MethodType.parseFromString(methodAndBody[0]);
+		String methodPart = s.substring(0, s.indexOf(' '));
+		String bodyPart = s.substring(s.indexOf(' ') + 1);
 		
-		if (method == null || methodAndBody.length < 2)
-			throw new ObjectFormatException("No method provided");
+		if (bodyPart.isEmpty())
+			throw new ObjectFormatException("No body provided");
 		
-		return new Request(method, methodAndBody[1], false);
+		MethodType method = MethodType.parseFromString(methodPart);
+		
+		if (method == null)
+			throw new ObjectFormatException("Unknown method");
+		
+		return new Request(method, bodyPart, false);
 	}
 	
 	private static String createParameterString(Map<String, String> parameterValues)

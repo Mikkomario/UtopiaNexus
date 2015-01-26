@@ -29,7 +29,7 @@ public class TestClient
 	 */
 	public static void main(String[] args)
 	{
-		String address = "82.130.11.90";
+		String address = "10.100.39.173";
 		int port = 7777;
 		
 		if (args.length > 0)
@@ -38,7 +38,7 @@ public class TestClient
 			port = Integer.parseInt(args[1]);
 		
 		// Creates the client
-		Client client = new Client("test/1.1", address, port);
+		Client client = new Client("test/1.1", address, port, true);
 		
 		// Checks for user input
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));

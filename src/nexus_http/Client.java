@@ -36,6 +36,7 @@ public class Client
 	private String hostAddress;
 	private int hostPort;
 	private Stack<DefaultBHttpClientConnection> openConnections;
+	private boolean encode;
 	
 	
 	// CONSTRUCTOR	-------------------------------------------------------
@@ -46,14 +47,16 @@ public class Client
 	 * @param userAgent The userAgent used in the requests
 	 * @param hostAddress The address (or ip) of the hosting server
 	 * @param hostPort The port used to connect to the server
+	 * @param encodeRequests Should the sent requests be encoded in UTF-8
 	 */
-	public Client(String userAgent, String hostAddress, int hostPort)
+	public Client(String userAgent, String hostAddress, int hostPort, boolean encodeRequests)
 	{
 		// Initializes attributes
 		this.userAgent = userAgent;
 		this.hostAddress = hostAddress;
 		this.hostPort = hostPort;
 		this.openConnections = new Stack<>();
+		this.encode = encodeRequests;
 	}
 
 	/**
@@ -100,7 +103,7 @@ public class Client
 		}
 		
 		// Creates the request
-		HttpRequest httpRequest = request.toHttpRequest();
+		HttpRequest httpRequest = request.toHttpRequest(this.encode);
 		
 		try
 		{

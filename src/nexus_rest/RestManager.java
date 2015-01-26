@@ -64,6 +64,7 @@ public class RestManager implements RequestHandler
 		
 		ByteArrayOutputStream xml = null;
 		XMLStreamWriter writer = null;
+		boolean writerOpen = false;
 		
 		// Finds the requested entity
 		try
@@ -75,22 +76,27 @@ public class RestManager implements RequestHandler
 			{
 				// For GET, parses the entity and sends the data
 				case GET:
-					writer = XMLIOAccessor.createWriter(xml);
 					xml = new ByteArrayOutputStream();
+					writer = XMLIOAccessor.createWriter(xml);
+					writerOpen = true;
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					
 					requested.writeContent(this.serverLink, writer);
 					
 					XMLIOAccessor.writeDocumentEnd(writer);
+					XMLIOAccessor.closeWriter(writer);
+					writerOpen = false;
 					response.setEntity(new StringEntity(xml.toString(), ContentType.TEXT_XML));
+					
 					break;
 				// For POST, posts a new entity, returns a link to the new entity
 				case POST:
-					// TODO: A bit WET
+					// TODO: WETWET
 					RestEntity newEntity = requested.Post(parsedRequest.getParameters());
 					
-					writer = XMLIOAccessor.createWriter(xml);
 					xml = new ByteArrayOutputStream();
+					writer = XMLIOAccessor.createWriter(xml);
+					writerOpen = true;
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					
 					writer.writeStartElement(newEntity.getName());
@@ -98,7 +104,10 @@ public class RestManager implements RequestHandler
 					writer.writeEndElement();
 					
 					XMLIOAccessor.writeDocumentEnd(writer);
+					XMLIOAccessor.closeWriter(writer);
+					writerOpen = false;
 					response.setEntity(new StringEntity(xml.toString(), ContentType.TEXT_XML));
+					
 					break;
 				// For PUT, changes an attribute in the entity, returns a link to the 
 				// modified entity
@@ -135,14 +144,18 @@ public class RestManager implements RequestHandler
 		}
 		finally
 		{
-			XMLIOAccessor.closeWriter(writer);
+			if (writerOpen)
+				XMLIOAccessor.closeWriter(writer);
 		}
 	}
 
 	@Override
 	public String getAcceptedPath()
 	{
-		return "/" + encodeIfNecessary(this.root.getName() + "/*");
+		if (!this.useEncoding)
+			return "/" + this.root + "/*";
+		else
+			return encodeIfNecessary("/" + this.root.getName()) + "*";
 	}
 	
 	
@@ -153,7 +166,7 @@ public class RestManager implements RequestHandler
 	 */
 	public String getAdditionalAcceptedPath()
 	{
-		return "/" + encodeIfNecessary(this.root.getName());
+		return encodeIfNecessary("/" + this.root.getName());
 	}
 	
 	private String encodeIfNecessary(String s)

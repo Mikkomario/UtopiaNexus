@@ -89,7 +89,7 @@ public class NexusServerTest
 				throws HttpException, IOException
 		{
 			// Sends the parsed request as the response
-			Request parsedRequest = new Request(request);
+			Request parsedRequest = new Request(request, false);
 			response.setStatusCode(HttpStatus.SC_OK);
 			HttpEntity body = new StringEntity(parsedRequest.toString());
 			response.setEntity(body);
