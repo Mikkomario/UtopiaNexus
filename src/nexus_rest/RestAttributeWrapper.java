@@ -1,6 +1,6 @@
 package nexus_rest;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,9 +85,9 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 	}
 
 	@Override
-	protected List<RestEntity> getMissingEntities(Map<String, String> parameters)
+	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters)
 	{
 		// There are no entities under attributes
-		return new ArrayList<>();
+		return new HashMap<>();
 	}
 }

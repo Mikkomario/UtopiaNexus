@@ -1,6 +1,6 @@
 package nexus_rest;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -67,8 +67,8 @@ public class SimpleRestEntity extends RestEntity
 	}
 
 	@Override
-	protected List<RestEntity> getMissingEntities(Map<String, String> parameters)
+	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters)
 	{
-		return new ArrayList<RestEntity>();
+		return new HashMap<>();
 	}
 }

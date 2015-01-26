@@ -98,11 +98,13 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * This method should fetch all of the entities that are under this entity but not as 
 	 * links or children.
 	 * @param parameters The parameters provided by the client
-	 * @return A list containing all the restEntities under this entity but not those 
-	 * registered as links or children.
+	 * @return A Map containing all the restEntities under this entity but not those 
+	 * already registered as links or children. The entities are mapped with their names so 
+	 * that they can substitute links or children alike. Null can be returned, in case there 
+	 * are no missing entities.
 	 * @throws HttpException If the missing entities can't be reached for some reason
 	 */
-	protected abstract List<RestEntity> getMissingEntities(Map<String, String> parameters) 
+	protected abstract Map<String, RestEntity> getMissingEntities(Map<String, String> parameters) 
 			throws HttpException;
 	
 	
@@ -321,16 +323,12 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		// Writes the links
 		for (String link : getlinkNames())
 		{
-			writer.writeStartElement(link);
-			getLinkedEntity(link).writeLinkAsAttribute(serverLink, writer);
-			writer.writeEndElement();
+			writeEntityLink(link, getLinkedEntity(link), serverLink, writer);
 		}
 		// Writes the children
 		for (RestEntity child : getChildren())
 		{
-			writer.writeStartElement(child.getName());
-			child.writeLinkAsAttribute(serverLink, writer);
-			writer.writeEndElement();
+			writeEntityLink(child.getName(), child, serverLink, writer);
 		}
 		// Writes the attributes
 		Map<String, String> attributes = getAttributes();
@@ -341,12 +339,13 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		}
 		
 		// Writes the missing entities
-		for (RestEntity entity : getMissingEntities(new HashMap<>()))
+		Map<String, RestEntity> missingEntities = getMissingEntities(new HashMap<>());
+		if (missingEntities != null)
 		{
-			// TODO: WETWET
-			writer.writeStartElement(entity.getName());
-			entity.writeLinkAsAttribute(serverLink, writer);
-			writer.writeEndElement();
+			for (String entityName : missingEntities.keySet())
+			{
+				writeEntityLink(entityName, missingEntities.get(entityName), serverLink, writer);
+			}
 		}
 		
 		writer.writeEndElement();
@@ -405,9 +404,13 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			entities.addEntity(child);
 		}
 		
-		for (RestEntity entity : getMissingEntities(parameters))
+		Map<String, RestEntity> missingEntities = getMissingEntities(parameters);
+		if (missingEntities != null)
 		{
-			entities.addEntity(entity);
+			for (RestEntity entity : missingEntities.values())
+			{
+				entities.addEntity(entity);
+			}
 		}
 		
 		// Modifies the list a bit
@@ -415,5 +418,13 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		entities.adjustSizeWithParameters(parameters);
 		
 		return entities;
+	}
+	
+	private static void writeEntityLink(String linkName, RestEntity entity, String serverLink, 
+			XMLStreamWriter writer) throws XMLStreamException
+	{
+		writer.writeStartElement(linkName);
+		entity.writeLinkAsAttribute(serverLink, writer);
+		writer.writeEndElement();
 	}
 }

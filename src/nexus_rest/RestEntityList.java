@@ -2,6 +2,7 @@ package nexus_rest;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -111,10 +112,10 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	}
 	
 	@Override
-	protected List<RestEntity> getMissingEntities(Map<String, String> parameters)
+	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters)
 	{
 		// The lists give all their entities in the getMissingEntity -method
-		return new ArrayList<>();
+		return new HashMap<>();
 	}
 	
 	@Override
