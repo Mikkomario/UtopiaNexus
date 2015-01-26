@@ -37,6 +37,28 @@ public class RestServerTest
 	 */
 	public static void main(String[] args)
 	{
+		startServer(args);
+	}
+	
+	
+	// OTHER METHODS	----------------------------
+	
+	/**
+	 * Sets the root element to the manager before it is created
+	 * @param newRoot The root that will be used in the tests
+	 */
+	public static void setRootEntity(RestEntity newRoot)
+	{
+		root = newRoot;
+	}
+	
+	/**
+	 * Starts the test server. Type in 'exit' to quit
+	 * @param args The first parameter is the server ip. The second parameter is the port 
+	 * number default is 7777)
+	 */
+	public static void startServer(String[] args)
+	{
 		String address = "10.100.39.173";
 		int port = 7777;
 		
@@ -88,17 +110,5 @@ public class RestServerTest
 		{
 			e.printStackTrace();
 		}
-	}
-	
-	
-	// OTHER METHODS	----------------------------
-	
-	/**
-	 * Sets the root element to the manager before it is created
-	 * @param newRoot The root that will be used in the tests
-	 */
-	public static void setRootEntity(RestEntity newRoot)
-	{
-		root = newRoot;
 	}
 }
