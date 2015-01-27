@@ -1,5 +1,11 @@
 package nexus_rest;
 
+import java.util.Map;
+
+import nexus_http.HttpException;
+import nexus_http.MethodNotSupportedException;
+import nexus_http.MethodType;
+
 /**
  * These entities are never saved into the server but are used as wrappers and temporary 
  * holders.
@@ -11,7 +17,7 @@ public abstract class TemporaryRestEntity extends RestEntity
 {
 	// ATTRIBUTES	-------------------------
 	
-	private String path;
+	private String rootPath;
 	
 	
 	// CONSTRUCTOR	-------------------------
@@ -30,9 +36,22 @@ public abstract class TemporaryRestEntity extends RestEntity
 		super(name, content, null);
 		
 		if (parent != null)
-			this.path = parent.getPath() + "/" + getName();
+			this.rootPath = parent.getPath() + "/";
 		else
-			this.path = getName();
+			this.rootPath = "";
+	}
+	
+	/**
+	 * Creates a new entity
+	 * @param name The name of the entity
+	 * @param content The content of the entity
+	 * @param rootPath The path preceding this entity's path, including the final '/'
+	 */
+	public TemporaryRestEntity(String name, RestData content, String rootPath)
+	{
+		super(name, content, null);
+		
+		this.rootPath = rootPath;
 	}
 	
 	
@@ -41,6 +60,25 @@ public abstract class TemporaryRestEntity extends RestEntity
 	@Override
 	public String getPath()
 	{
-		return this.path;
+		return getRootPath() + getName();
+	}
+	
+	@Override
+	public RestEntity Post(Map<String, String> parameters) throws HttpException
+	{
+		// Temporary entities can't usually create new entities below them since they are gone 
+		// after the operation is complete
+		throw new MethodNotSupportedException(MethodType.POST);
+	}
+	
+	
+	// GETTERS & SETTERS	--------------------
+	
+	/**
+	 * @return The path preceding this entity
+	 */
+	protected String getRootPath()
+	{
+		return this.rootPath;
 	}
 }

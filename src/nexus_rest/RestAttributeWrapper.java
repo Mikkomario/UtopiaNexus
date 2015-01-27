@@ -49,13 +49,6 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 	}
 
 	@Override
-	public RestEntity Post(Map<String, String> parameters) throws HttpException
-	{
-		// Attributes can't hold other elements
-		throw new MethodNotSupportedException(MethodType.POST);
-	}
-
-	@Override
 	public void Put(Map<String, String> parameters) throws HttpException
 	{
 		// Attributes can't be modified from within

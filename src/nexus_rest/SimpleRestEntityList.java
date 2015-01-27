@@ -32,13 +32,6 @@ public class SimpleRestEntityList extends RestEntityList
 	// IMPLEMENTED METHODS	----------------------
 
 	@Override
-	public RestEntity Post(Map<String, String> parameters) throws HttpException
-	{
-		// POST is not supported by default
-		throw new MethodNotSupportedException(MethodType.POST);
-	}
-
-	@Override
 	public void Put(Map<String, String> parameters) throws HttpException
 	{
 		// Lists don't use attributes
