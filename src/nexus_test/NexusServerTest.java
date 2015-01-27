@@ -3,15 +3,23 @@ package nexus_test;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.util.Random;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 
+import nexus_http.HttpException;
+import nexus_http.InternalServerException;
+import nexus_http.InvalidParametersException;
+import nexus_http.MethodNotSupportedException;
+import nexus_http.MethodType;
+import nexus_http.NotFoundException;
 import nexus_http.Request;
 import nexus_http.RequestHandler;
 import nexus_http.Server;
@@ -86,7 +94,7 @@ public class NexusServerTest
 		
 		@Override
 		public void handle(HttpRequest request, HttpResponse response, HttpContext context)
-				throws HttpException, IOException
+				throws org.apache.http.HttpException, IOException
 		{
 			// Sends the parsed request as the response
 			Request parsedRequest = new Request(request, false);
@@ -95,6 +103,8 @@ public class NexusServerTest
 			response.setEntity(body);
 			
 			printRequestData(parsedRequest);
+			
+			sendRandomResponse(response);
 		}
 
 		@Override
@@ -118,6 +128,38 @@ public class NexusServerTest
 			for (String parameterName : request.getParameterNames())
 			{
 				System.out.println("-> " + parameterName);
+			}
+		}
+		
+		private static void sendRandomResponse(HttpResponse response)
+		{
+			Random random = new Random();
+			
+			if (random.nextDouble() < 0.3)
+			{
+				response.setStatusCode(HttpStatus.SC_OK);
+				try
+				{
+					response.setEntity(new StringEntity("OK"));
+				}
+				catch (UnsupportedEncodingException e)
+				{
+					System.err.println("Can't encode");
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				
+				HttpException[] exceptions = {
+						new InvalidParametersException("Ivalid parameters"), 
+						new InternalServerException("server error"), 
+						new MethodNotSupportedException(MethodType.GET), 
+						new NotFoundException("asdasd")};
+				
+				HttpException e = exceptions[random.nextInt(exceptions.length)];
+				response.setStatusCode(e.getStatusCode());
+				response.setEntity(new StringEntity(e.getMessage(), ContentType.TEXT_PLAIN));
 			}
 		}
 	}

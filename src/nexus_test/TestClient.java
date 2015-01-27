@@ -1,17 +1,15 @@
 package nexus_test;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import org.apache.http.HttpResponse;
 
 import flow_recording.ObjectFormatException;
 import nexus_http.Client;
 import nexus_http.NoConnectionException;
 import nexus_http.NoResponseException;
 import nexus_http.Request;
+import nexus_http.ResponseReplicate;
 
 /**
  * TestClient is used for sending requests to servers
@@ -56,11 +54,9 @@ public class TestClient
 					break;
 				else
 				{
-					HttpResponse response = client.sendRequest(Request.parseFromString(input));
-					System.out.println("Status: " + response.getStatusLine());
-					ByteArrayOutputStream content = new ByteArrayOutputStream();
-					response.getEntity().writeTo(content);
-					System.out.println("Content: " + content);
+					ResponseReplicate response = client.sendRequest(Request.parseFromString(input));
+					System.out.println("Status: " + response.getStatusCode());
+					System.out.println("Content: " + response.getContent());
 				}
 			}
 			catch (IOException e)

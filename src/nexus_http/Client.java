@@ -21,6 +21,7 @@ import org.apache.http.protocol.RequestContent;
 import org.apache.http.protocol.RequestExpectContinue;
 import org.apache.http.protocol.RequestTargetHost;
 import org.apache.http.protocol.RequestUserAgent;
+import org.apache.http.util.EntityUtils;
 
 /**
  * Client is a simple tool with which one can make requests to a server
@@ -36,7 +37,7 @@ public class Client
 	private String hostAddress;
 	private int hostPort;
 	private Stack<DefaultBHttpClientConnection> openConnections;
-	private boolean encode;
+	private boolean encode, reuse;
 	
 	
 	// CONSTRUCTOR	-------------------------------------------------------
@@ -57,6 +58,7 @@ public class Client
 		this.hostPort = hostPort;
 		this.openConnections = new Stack<>();
 		this.encode = encodeRequests;
+		this.reuse = false;
 	}
 
 	/**
@@ -67,7 +69,8 @@ public class Client
 	 * @throws NoConnectionException If the server can't be reached
 	 * @throws NoResponseException If the server didn't respond
 	 */
-	public HttpResponse sendRequest(Request request) throws NoConnectionException, NoResponseException
+	public ResponseReplicate sendRequest(Request request) throws NoConnectionException, 
+			NoResponseException
 	{
 		// Initializes the connection statistics
 		HttpProcessor processor = HttpProcessorBuilder.create()
@@ -82,8 +85,9 @@ public class Client
 		HttpHost host = new HttpHost(this.hostAddress, this.hostPort);
 		coreContext.setTargetHost(host);
 
-		// TODO: Do this only if there's no open connection yet?
-		this.openConnections.push(new DefaultBHttpClientConnection(8 * 1024));
+		// Opens a new connection only if the old one isn't being reused
+		if (!this.reuse)
+			this.openConnections.push(new DefaultBHttpClientConnection(8 * 1024));
 		ConnectionReuseStrategy connectionStrategy = DefaultConnectionReuseStrategy.INSTANCE;
 		
 		// Creates a new connection if necessary
@@ -113,11 +117,20 @@ public class Client
 			
 			executor.postProcess(response, processor, coreContext);
 			
+			ResponseReplicate replicate = new ResponseReplicate(response);
+			EntityUtils.consumeQuietly(response.getEntity());
+			
 			// Closes the connection and quits
 			if (!connectionStrategy.keepAlive(response, coreContext))
+			{
 				closeLatesConnection();
+				this.reuse = false;
+			}
+			// Or continues the connection
+			else
+				this.reuse = true;
 			
-			return response;
+			return replicate;
 		}
 		catch (NoHttpResponseException e)
 		{

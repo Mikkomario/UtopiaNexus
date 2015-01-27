@@ -118,6 +118,7 @@ public class RestManager implements RequestHandler
 				case DELETE:
 					requested.delete(parsedRequest.getParameters());
 					break;
+				// TODO: HEAD not working for some reason... (doesn't reach the manager?)
 				// For HEAD, doesn't parse the entity but sends an OK status instead
 				default: break;
 			}
@@ -126,6 +127,7 @@ public class RestManager implements RequestHandler
 		}
 		catch(HttpException e)
 		{
+			// TODO: On invalid parameter exception, the content is cut short
 			response.setStatusCode(e.getStatusCode());
 			response.setEntity(new StringEntity(e.getMessage(), ContentType.TEXT_PLAIN));
 			
