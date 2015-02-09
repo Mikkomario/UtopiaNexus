@@ -23,6 +23,6 @@ public class NotFoundException extends HttpException
 	 */
 	public NotFoundException(String requestedPath)
 	{
-		super(requestedPath + " was no found on the server", HttpStatus.SC_NOT_FOUND);
+		super(requestedPath + " was not found on the server", HttpStatus.SC_NOT_FOUND);
 	}
 }

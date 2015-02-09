@@ -39,13 +39,6 @@ public class SimpleRestEntityList extends RestEntityList
 	}
 
 	@Override
-	protected RestEntityList wrapIntoList(String name, RestEntity parent, 
-			List<RestEntity> entities)
-	{
-		return new SimpleRestEntityList(name, parent, entities);
-	}
-
-	@Override
 	public void trim(Map<String, String> parameters)
 	{
 		// Simple lists cannot be sorted since they can't compare entities

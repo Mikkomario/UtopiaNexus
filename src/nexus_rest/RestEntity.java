@@ -85,16 +85,6 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			Map<String, String> parameters) throws HttpException;
 	
 	/**
-	 * This method wraps the entities into an entityList of desired type
-	 * @param name The name of the list
-	 * @param parent The parent of the list
-	 * @param entities The entities should fill the list
-	 * @return A list with the given data
-	 */
-	protected abstract RestEntityList wrapIntoList(String name, RestEntity parent, 
-			List<RestEntity> entities);
-	
-	/**
 	 * This method should fetch all of the entities that are under this entity but not as 
 	 * links or children.
 	 * @param parameters The parameters provided by the client
@@ -176,6 +166,20 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	
 	
 	// OTHER METHODS	----------------------------------
+	
+	/**
+	 * This method wraps the entities into an entityList. The subclasses may override this 
+	 * method if they wish to use a specific type of entityList
+	 * @param name The name of the list
+	 * @param parent The parent of the list
+	 * @param entities The entities should fill the list
+	 * @return A list with the given data
+	 */
+	protected RestEntityList wrapIntoList(String name, RestEntity parent, 
+			List<RestEntity> entities)
+	{
+		return new SimpleRestEntityList(name, parent, entities);
+	}
 	
 	/**
 	 * Deletes the entity if that's at all possible

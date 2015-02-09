@@ -1,7 +1,6 @@
 package nexus_rest;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import nexus_http.HttpException;
@@ -57,13 +56,6 @@ public class SimpleRestEntity extends RestEntity
 	{
 		// Simple RestEntities don't have any special entities beneath them
 		throw new NotFoundException(getPath() + "/" + pathPart);
-	}
-
-	@Override
-	protected RestEntityList wrapIntoList(String name, RestEntity parent,
-			List<RestEntity> entities)
-	{
-		return new SimpleRestEntityList(name, parent, entities);
 	}
 
 	@Override
