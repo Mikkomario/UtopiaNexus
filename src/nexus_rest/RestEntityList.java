@@ -1,7 +1,6 @@
 package nexus_rest;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +23,9 @@ import nexus_http.NotFoundException;
  */
 public abstract class RestEntityList extends TemporaryRestEntity
 {
-	// ATTRIBUTES	-------------------------
+	// ATTRIBUTES	--------------------------
 	
-	private List<RestEntity> entities;
+	private boolean trimmed;
 	
 	
 	// CONSTRUCTOR	--------------------------
@@ -36,16 +35,12 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 * @param name The name of the list itself
 	 * @param parent The parent of this list (the list won't be added as a child since it's 
 	 * only temporary)
-	 * @param initialEntities The RestEntities that will be added to this list
 	 */
-	public RestEntityList(String name, RestEntity parent, List<RestEntity> initialEntities)
+	public RestEntityList(String name, RestEntity parent)
 	{
 		super(name, new SimpleRestData(), parent);
 		
-		// Initializes attributes
-		this.entities = new ArrayList<>();
-		if (initialEntities != null)
-			this.entities.addAll(initialEntities);
+		this.trimmed = false;
 	}
 	
 	
@@ -58,6 +53,11 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 */
 	public abstract void trim(Map<String, String> parameters);
 	
+	/**
+	 * @return The entities this list contains.
+	 */
+	protected abstract List<RestEntity> getEntities();
+	
 	
 	// IMPLEMENTED METHODS	--------------------
 
@@ -65,11 +65,14 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	protected RestEntity getMissingEntity(String pathPart,
 			Map<String, String> parameters) throws HttpException
 	{
+		// Trims the list if necessary
+		trimIfNecessary(parameters);
+		
 		// If possible, returns a new list that contains the entities collected from the 
 		// entities in the current list
 		List<RestEntity> found = new ArrayList<>();
 		
-		for (RestEntity entity : this.entities)
+		for (RestEntity entity : getEntities())
 		{
 			try
 			{
@@ -92,9 +95,11 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	protected void prepareDelete(Map<String, String> parameters)
 			throws HttpException
 	{
+		trimIfNecessary(parameters);
+		
 		// By default, Deletes all the entities in the list
 		int successes = 0;
-		for (RestEntity entity : this.entities)
+		for (RestEntity entity : getEntities())
 		{
 			try
 			{
@@ -107,7 +112,7 @@ public abstract class RestEntityList extends TemporaryRestEntity
 			}
 		}
 		
-		if (!this.entities.isEmpty() && successes == 0)
+		if (!getEntities().isEmpty() && successes == 0)
 			throw new MethodNotSupportedException(MethodType.DELETE);
 	}
 	
@@ -119,26 +124,16 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	}
 	
 	@Override
-	public void writeContent(String serverLink, XMLStreamWriter writer) throws 
-			XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter writer, 
+			Map<String, String> parameters) throws XMLStreamException, HttpException
 	{
+		trimIfNecessary(parameters);
+		
 		// Writes the content of each entity in row
-		for (RestEntity entity : this.entities)
+		for (RestEntity entity : getEntities())
 		{
-			entity.writeContent(serverLink, writer);
+			entity.writeContent(serverLink, writer, parameters);
 		}
-	}
-	
-	
-	// GETTERS & SETTERS	--------------------
-	
-	/**
-	 * Sorts the entities using the given comparator
-	 * @param c The comparator used for sorting the entities
-	 */
-	protected void sort(Comparator<RestEntity> c)
-	{
-		this.entities.sort(c);
 	}
 	
 	
@@ -150,8 +145,8 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 */
 	public void addEntity(RestEntity entity)
 	{
-		if (entity != null && !this.entities.contains(entity))
-			this.entities.add(entity);
+		if (entity != null && !getEntities().contains(entity))
+			getEntities().add(entity);
 	}
 	
 	/**
@@ -160,19 +155,19 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 */
 	public void remove(RestEntity entity)
 	{
-		this.entities.remove(entity);
+		getEntities().remove(entity);
 	}
 	
 	/**
 	 * Drops a certain amount of entities from the beginning of the list
 	 * @param amount
 	 */
-	public void dropFirst(int amount)
+	private void dropFirst(int amount)
 	{
 		int dropped = 0;
-		while (dropped < amount && !this.entities.isEmpty())
+		while (dropped < amount && !getEntities().isEmpty())
 		{
-			this.entities.remove(0);
+			getEntities().remove(0);
 			dropped ++;
 		}
 	}
@@ -181,17 +176,17 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 * Removes the entities from the end of the list until it fits the given size
 	 * @param size How many entities the list should hold in the end (at maximum)
 	 */
-	public void fitToSize(int size)
+	private void fitToSize(int size)
 	{
 		if (size <= 0)
 		{
-			this.entities.clear();
+			getEntities().clear();
 			return;
 		}
 		
-		while(this.entities.size() > size)
+		while(getEntities().size() > size)
 		{
-			this.entities.remove(this.entities.size() - 1);
+			getEntities().remove(getEntities().size() - 1);
 		}
 	}
 	
@@ -201,11 +196,11 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 * @param parameters The parameters that define the new size of the list
 	 * @throws InvalidParametersException If the parameters couldn't be parsed
 	 */
-	public void adjustSizeWithParameters(Map<String, String> parameters) throws 
+	private void adjustSizeWithParameters(Map<String, String> parameters) throws 
 			InvalidParametersException
 	{
 		int from = 0;
-		int amount = this.entities.size();
+		int amount = getEntities().size();
 		
 		try
 		{
@@ -221,5 +216,16 @@ public abstract class RestEntityList extends TemporaryRestEntity
 		
 		dropFirst(from);
 		fitToSize(amount);
+	}
+	
+	private void trimIfNecessary(Map<String, String> parameters) throws 
+			InvalidParametersException
+	{
+		if (!this.trimmed)
+		{
+			trim(parameters);
+			adjustSizeWithParameters(parameters);
+			this.trimmed = true;
+		}
 	}
 }

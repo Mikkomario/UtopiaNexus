@@ -314,25 +314,32 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param serverLink The server part of the link, containing the server address, the port 
 	 * number and the first "/"
 	 * @param writer The writer that will write the object's data
+	 * @param parameters The parameters provided by the client. "linkType" parameter affects 
+	 * how the links will be written
 	 * @throws XMLStreamException If the writing failed
 	 * @throws HttpException If there was another problem during the write
 	 */
-	public void writeContent(String serverLink, XMLStreamWriter writer) throws 
-			XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter writer, 
+			Map<String, String> parameters) throws XMLStreamException, HttpException
 	{
+		// If the parameter 'noContent' is present, doesn't write anything
+		if (parameters.containsKey("noContent") && 
+				Boolean.parseBoolean(parameters.get("noContent")))
+			return;
+		
 		// Writes the entity element
 		writer.writeStartElement(getName());
-		writeLinkAsAttribute(serverLink, writer);
+		writeLinkAsAttribute(serverLink, writer, parameters);
 		
 		// Writes the links
 		for (String link : getlinkNames())
 		{
-			writeEntityLink(link, getLinkedEntity(link), serverLink, writer);
+			writeEntityLink(link, getLinkedEntity(link), serverLink, writer, parameters);
 		}
 		// Writes the children
 		for (RestEntity child : getChildren())
 		{
-			writeEntityLink(child.getName(), child, serverLink, writer);
+			writeEntityLink(child.getName(), child, serverLink, writer, parameters);
 		}
 		// Writes the attributes
 		Map<String, String> attributes = getAttributes();
@@ -348,7 +355,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		{
 			for (String entityName : missingEntities.keySet())
 			{
-				writeEntityLink(entityName, missingEntities.get(entityName), serverLink, writer);
+				writeEntityLink(entityName, missingEntities.get(entityName), serverLink, 
+						writer, parameters);
 			}
 		}
 		
@@ -360,12 +368,23 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * @param serverLink The server part of the link, containing the server address, the port 
 	 * number and the first "/"
 	 * @param writer The writer that will write the attribute into the stream
+	 * @param parameters The parameters provided by the client. The parameter 'linkType' 
+	 * affects how the links are written. 'simple' means that only the path is written. 
+	 * 'none' means that links won't be written at all. Any other value means that full links 
+	 * will be written
 	 * @throws XMLStreamException If the attribute couldn't be written into the stream
 	 */
-	public void writeLinkAsAttribute(String serverLink, XMLStreamWriter writer) 
-			throws XMLStreamException
+	public void writeLinkAsAttribute(String serverLink, XMLStreamWriter writer, 
+			Map<String, String> parameters) throws XMLStreamException
 	{
-		XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
+		String linkType = parameters.get("linkType");
+		
+		if (linkType == null)
+			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
+		else if (linkType.equalsIgnoreCase("simple"))
+			XMLIOAccessor.writeLinkAsAttribute(getPath(), writer);
+		else if (!linkType.equalsIgnoreCase("none"))
+			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
 	}
 	
 	/**
@@ -417,18 +436,14 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			}
 		}
 		
-		// Modifies the list a bit
-		entities.trim(parameters);
-		entities.adjustSizeWithParameters(parameters);
-		
 		return entities;
 	}
 	
 	private static void writeEntityLink(String linkName, RestEntity entity, String serverLink, 
-			XMLStreamWriter writer) throws XMLStreamException
+			XMLStreamWriter writer, Map<String, String> parameters) throws XMLStreamException
 	{
 		writer.writeStartElement(linkName);
-		entity.writeLinkAsAttribute(serverLink, writer);
+		entity.writeLinkAsAttribute(serverLink, writer, parameters);
 		writer.writeEndElement();
 	}
 }

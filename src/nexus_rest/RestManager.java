@@ -81,7 +81,8 @@ public class RestManager implements RequestHandler
 					writerOpen = true;
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					
-					requested.writeContent(this.serverLink, writer);
+					requested.writeContent(this.serverLink, writer, 
+							parsedRequest.getParameters());
 					
 					XMLIOAccessor.writeDocumentEnd(writer);
 					XMLIOAccessor.closeWriter(writer);
@@ -100,7 +101,8 @@ public class RestManager implements RequestHandler
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					
 					writer.writeStartElement(newEntity.getName());
-					newEntity.writeLinkAsAttribute(this.serverLink, writer);
+					newEntity.writeLinkAsAttribute(this.serverLink, writer, 
+							parsedRequest.getParameters());
 					writer.writeEndElement();
 					
 					XMLIOAccessor.writeDocumentEnd(writer);

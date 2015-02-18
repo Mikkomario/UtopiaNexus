@@ -1,5 +1,6 @@
 package nexus_rest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +15,11 @@ import nexus_http.MethodType;
  */
 public class SimpleRestEntityList extends RestEntityList
 {
+	// ATTRIBUTES	-------------------------------
+	
+	private List<RestEntity> entities;
+	
+	
 	// CONSTRUCTOR	-------------------------------
 	
 	/**
@@ -25,7 +31,11 @@ public class SimpleRestEntityList extends RestEntityList
 	public SimpleRestEntityList(String name, RestEntity parent,
 			List<RestEntity> initialEntities)
 	{
-		super(name, parent, initialEntities);
+		super(name, parent);
+		
+		this.entities = new ArrayList<>();
+		if (initialEntities != null)
+			this.entities.addAll(initialEntities);
 	}
 	
 	
@@ -42,5 +52,11 @@ public class SimpleRestEntityList extends RestEntityList
 	public void trim(Map<String, String> parameters)
 	{
 		// Simple lists cannot be sorted since they can't compare entities
+	}
+
+	@Override
+	protected List<RestEntity> getEntities()
+	{
+		return this.entities;
 	}
 }
