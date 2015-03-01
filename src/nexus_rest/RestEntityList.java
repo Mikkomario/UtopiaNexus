@@ -119,6 +119,8 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	@Override
 	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters)
 	{
+		// TODO: Returns all entities from all the entities in this list
+		// But how to manage the map format?
 		// The lists give all their entities in the getMissingEntity -method
 		return new HashMap<>();
 	}

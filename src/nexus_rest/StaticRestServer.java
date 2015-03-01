@@ -52,7 +52,7 @@ public class StaticRestServer
 	}
 	
 	/**
-	 * Starts the test server. Type in 'exit' to quit
+	 * Starts the test server. Type in 'exit' to quit. The requests should be encoded in UTF-8
 	 * @param args The first parameter is the server ip. The second parameter is the port 
 	 * number default is 7777)
 	 */
