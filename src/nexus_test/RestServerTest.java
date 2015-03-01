@@ -19,7 +19,7 @@ public class RestServerTest
 	
 	/**
 	 * Starts the server. Type exit to quit.
-	 * @param args ip and port
+	 * @param args ip and port (optional, default = 7777)
 	 */
 	public static void main(String[] args)
 	{

@@ -158,14 +158,25 @@ public class FileReaderClient extends AbstractFileReader
 	@Override
 	public void readFile(String fileName, String commentIndicator) throws FileNotFoundException
 	{
+		super.readFile(fileName, commentIndicator);
+		
+		// Closes the connections afterwards
 		this.parsedVariables = new HashMap<>();
 		this.failed = false;
-		super.readFile(fileName, commentIndicator);
+		close();
 	}
 	
 	
 	// OTHER METHODS	------------------------------------------
 
+	/**
+	 * Closes the connections between the client and the server
+	 */
+	private void close()
+	{
+		this.client.closeAllConnections();
+	}
+	
 	private static String parseVariableFromResponse(ResponseReplicate response, 
 			String contentName, boolean contentIsAttribute) throws 
 			UnsupportedEncodingException, XMLStreamException

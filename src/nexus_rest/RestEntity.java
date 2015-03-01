@@ -315,7 +315,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * number and the first "/"
 	 * @param writer The writer that will write the object's data
 	 * @param parameters The parameters provided by the client. "linkType" parameter affects 
-	 * how the links will be written
+	 * how the links will be written. "noContent=true" makes it so that the entity won't be 
+	 * written at all
 	 * @throws XMLStreamException If the writing failed
 	 * @throws HttpException If there was another problem during the write
 	 */
@@ -380,11 +381,11 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		String linkType = parameters.get("linkType");
 		
 		if (linkType == null)
-			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
+			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer, false);
 		else if (linkType.equalsIgnoreCase("simple"))
-			XMLIOAccessor.writeLinkAsAttribute(getPath(), writer);
+			XMLIOAccessor.writeLinkAsAttribute(getPath(), writer, false);
 		else if (!linkType.equalsIgnoreCase("none"))
-			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer);
+			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer, false);
 	}
 	
 	/**
