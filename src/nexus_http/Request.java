@@ -161,7 +161,11 @@ public class Request
 		{
 			try
 			{
-				uriLine = URLEncoder.encode(uriLine, "UTF-8");
+				// Doesn't encode the initial slash at the beginning
+				if (uriLine.startsWith("/"))
+					uriLine = "/" + URLEncoder.encode(uriLine.substring(1), "UTF-8");
+				else
+					uriLine = URLEncoder.encode(uriLine, "UTF-8");
 			}
 			catch (UnsupportedEncodingException e)
 			{

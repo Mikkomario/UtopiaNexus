@@ -161,7 +161,7 @@ public class RestManager implements RequestHandler
 		if (!this.useEncoding)
 			return "/" + this.root + "/*";
 		else
-			return encodeIfNecessary("/" + this.root.getName()) + "*";
+			return "/" + encodeIfNecessary(this.root.getName()) + "*";
 	}
 	
 	
@@ -172,7 +172,7 @@ public class RestManager implements RequestHandler
 	 */
 	public String getAdditionalAcceptedPath()
 	{
-		return encodeIfNecessary("/" + this.root.getName());
+		return "/" + encodeIfNecessary(this.root.getName());
 	}
 	
 	private String encodeIfNecessary(String s)
