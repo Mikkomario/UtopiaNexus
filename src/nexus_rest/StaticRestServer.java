@@ -58,6 +58,7 @@ public class StaticRestServer
 	 */
 	public static void startServer(String[] args)
 	{
+		// TODO: Create a new thread for this?
 		String address = "82.130.11.90";
 		int port = 7777;
 		
@@ -71,6 +72,7 @@ public class StaticRestServer
 		Server server = new Server(port);
 		if (root == null)
 			root = new TestRestEntity("root", null);
+		// TODO: Allow non-encoded servers
 		RestManager restManager = new RestManager(root, serverLink, true);
 		server.addRequestHandler(restManager);
 		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());

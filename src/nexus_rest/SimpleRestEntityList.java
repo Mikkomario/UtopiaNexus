@@ -29,7 +29,7 @@ public class SimpleRestEntityList extends RestEntityList
 	 * @param initialEntities The entities that will fill the list
 	 */
 	public SimpleRestEntityList(String name, RestEntity parent,
-			List<RestEntity> initialEntities)
+			List<? extends RestEntity> initialEntities)
 	{
 		super(name, parent);
 		

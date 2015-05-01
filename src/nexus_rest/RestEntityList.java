@@ -55,8 +55,9 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	
 	/**
 	 * @return The entities this list contains.
+	 * @throws HttpException If the entities couldn't be retrieved
 	 */
-	protected abstract List<RestEntity> getEntities();
+	protected abstract List<RestEntity> getEntities() throws HttpException;
 	
 	
 	// IMPLEMENTED METHODS	--------------------
@@ -117,7 +118,8 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	}
 	
 	@Override
-	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters)
+	protected Map<String, RestEntity> getMissingEntities(Map<String, String> parameters) 
+			throws HttpException
 	{
 		// TODO: Returns all entities from all the entities in this list
 		// But how to manage the map format?
@@ -144,8 +146,9 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	/**
 	 * Adds a new entity to the list
 	 * @param entity The entity that will be added to the list
+	 * @throws HttpException If the operation couldn't be completed
 	 */
-	public void addEntity(RestEntity entity)
+	public void addEntity(RestEntity entity) throws HttpException
 	{
 		if (entity != null && !getEntities().contains(entity))
 			getEntities().add(entity);
@@ -154,17 +157,34 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	/**
 	 * Removes an entity from the list
 	 * @param entity The entity that will be removed from the list
+	 * @throws HttpException If the operation couldn't be completed
 	 */
-	public void remove(RestEntity entity)
+	public void remove(RestEntity entity) throws HttpException
 	{
 		getEntities().remove(entity);
 	}
 	
 	/**
+	 * Trims the entity list if it hasn't been already
+	 * @param parameters
+	 * @throws HttpException
+	 */
+	protected void trimIfNecessary(Map<String, String> parameters) throws HttpException
+	{
+		if (!this.trimmed)
+		{
+			trim(parameters);
+			adjustSizeWithParameters(parameters);
+			this.trimmed = true;
+		}
+	}
+	
+	/**
 	 * Drops a certain amount of entities from the beginning of the list
 	 * @param amount
+	 * @throws HttpException If the operation couldn't be completed
 	 */
-	private void dropFirst(int amount)
+	private void dropFirst(int amount) throws HttpException
 	{
 		int dropped = 0;
 		while (dropped < amount && !getEntities().isEmpty())
@@ -177,8 +197,9 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	/**
 	 * Removes the entities from the end of the list until it fits the given size
 	 * @param size How many entities the list should hold in the end (at maximum)
+	 * @throws HttpException If the operation couldn't be completed
 	 */
-	private void fitToSize(int size)
+	private void fitToSize(int size) throws HttpException
 	{
 		if (size <= 0)
 		{
@@ -199,7 +220,7 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	 * @throws InvalidParametersException If the parameters couldn't be parsed
 	 */
 	private void adjustSizeWithParameters(Map<String, String> parameters) throws 
-			InvalidParametersException
+			HttpException
 	{
 		int from = 0;
 		int amount = getEntities().size();
@@ -218,16 +239,5 @@ public abstract class RestEntityList extends TemporaryRestEntity
 		
 		dropFirst(from);
 		fitToSize(amount);
-	}
-	
-	private void trimIfNecessary(Map<String, String> parameters) throws 
-			InvalidParametersException
-	{
-		if (!this.trimmed)
-		{
-			trim(parameters);
-			adjustSizeWithParameters(parameters);
-			this.trimmed = true;
-		}
 	}
 }
