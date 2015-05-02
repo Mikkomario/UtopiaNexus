@@ -1,9 +1,12 @@
 package nexus_rest;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
+import flow_io.XMLIOAccessor;
 import nexus_http.HttpException;
 import nexus_http.MethodNotSupportedException;
 import nexus_http.MethodType;
@@ -18,6 +21,11 @@ import nexus_http.NotFoundException;
  */
 public class RestAttributeWrapper extends TemporaryRestEntity
 {
+	// ATTRIBUTES	-------------------------------
+	
+	private String value;
+	
+	
 	// CONSTRUCTOR	-------------------------------
 	
 	/**
@@ -33,11 +41,22 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 		
 		Map<String, String> attributes = parent.getContent().getAttributes();
 		if (attributes.containsKey(name))
-			getContent().setAttribute(name, attributes.get(name));
+		{
+			this.value = attributes.get(name);
+			getContent().setAttribute(name, this.value);
+		}
 	}
 
 	
 	// IMPLEMENTED METHODS	-----------------------
+	
+	@Override
+	public void writeContent(String serverLink, XMLStreamWriter writer, 
+			Map<String, String> parameters) throws XMLStreamException, HttpException
+	{
+		if (this.value != null)
+			XMLIOAccessor.writeElementWithData(getName(), this.value, writer);
+	}
 	
 	@Override
 	public RestEntity getEntity(String pathPart, Map<String, String> parameters) 
@@ -45,7 +64,7 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 	{
 		// Wrappers don't have any entities under them since they 
 		// already represent an attribute
-		throw new NotFoundException(getPath() + pathPart);
+		throw new NotFoundException(getPath() + "/" + pathPart);
 	}
 
 	@Override
@@ -68,13 +87,6 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 			Map<String, String> parameters) throws NotFoundException
 	{
 		throw new NotFoundException(getPath() + "/" + pathPart);
-	}
-
-	@Override
-	protected RestEntityList wrapIntoList(String name, RestEntity parent,
-			List<RestEntity> entities)
-	{
-		return new SimpleRestEntityList(name, parent, entities);
 	}
 
 	@Override

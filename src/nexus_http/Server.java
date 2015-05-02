@@ -32,8 +32,6 @@ import org.apache.http.protocol.UriHttpRequestHandlerMapper;
  */
 public class Server
 {
-	// TODO: Make this a thread
-	
 	// ATTRIBUTES	--------------------------------
 	
 	private Thread lastRequestThread;

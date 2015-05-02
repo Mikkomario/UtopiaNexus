@@ -53,27 +53,30 @@ public class StaticRestServer
 	
 	/**
 	 * Starts the test server. Type in 'exit' to quit. The requests should be encoded in UTF-8
-	 * @param args The first parameter is the server ip. The second parameter is the port 
-	 * number default is 7777)
+	 * @param args The first parameter is the server ip, the second parameter is the port 
+	 * number (default = 7777), the third parameter defines if encoding is on (default = true)
 	 */
 	public static void startServer(String[] args)
 	{
 		// TODO: Create a new thread for this?
 		String address = "82.130.11.90";
 		int port = 7777;
+		boolean encode = true;
 		
 		if (args.length > 0)
 			address = args[0];
 		if (args.length > 1)
 			port = Integer.parseInt(args[1]);
+		if (args.length > 2)
+			encode = Boolean.parseBoolean(args[2]);
 		
 		String serverLink = "http://" + address + ":" + port + "/";
 		
 		Server server = new Server(port);
 		if (root == null)
 			root = new TestRestEntity("root", null);
-		// TODO: Allow non-encoded servers
-		RestManager restManager = new RestManager(root, serverLink, true);
+		
+		RestManager restManager = new RestManager(root, serverLink, encode);
 		server.addRequestHandler(restManager);
 		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());
 		server.start();
