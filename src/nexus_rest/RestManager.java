@@ -16,10 +16,14 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.protocol.HttpContext;
 
 import flow_io.XMLIOAccessor;
+import nexus_event.HttpEvent;
+import nexus_event.HttpEvent.HttpEventType;
+import nexus_event.HttpEventListenerHandler;
 import nexus_http.HttpException;
 import nexus_http.InternalServerException;
 import nexus_http.Request;
 import nexus_http.RequestHandler;
+import nexus_http.ResponseReplicate;
 
 /**
  * RestManager keeps track of restEntities and handles incoming requests
@@ -34,6 +38,7 @@ public class RestManager implements RequestHandler
 	private RestEntity root;
 	private String serverLink;
 	private boolean useEncoding;
+	private HttpEventListenerHandler listenerHandler;
 	
 	
 	// CONSTRUCTOR	--------------------------------
@@ -51,6 +56,7 @@ public class RestManager implements RequestHandler
 		this.root = root;
 		this.serverLink = serverLink;
 		this.useEncoding = useEncoding;
+		this.listenerHandler = new HttpEventListenerHandler(false);
 	}
 	
 	
@@ -61,6 +67,8 @@ public class RestManager implements RequestHandler
 			throws org.apache.http.HttpException, IOException
 	{
 		Request parsedRequest = new Request(request, this.useEncoding);
+		
+		this.listenerHandler.onHttpEvent(new HttpEvent(parsedRequest, HttpEventType.RECEIVED));
 		
 		ByteArrayOutputStream xml = null;
 		XMLStreamWriter writer = null;
@@ -152,12 +160,15 @@ public class RestManager implements RequestHandler
 		{
 			if (writerOpen)
 				XMLIOAccessor.closeWriter(writer);
+			
+			getHttpListenerHandler().onHttpEvent(new HttpEvent(
+					new ResponseReplicate(response), HttpEventType.SENT));
 		}
 	}
 
 	@Override
 	public String getAcceptedPath()
-	{
+	{		
 		if (!this.useEncoding)
 			return "/" + this.root + "/*";
 		else
@@ -173,6 +184,15 @@ public class RestManager implements RequestHandler
 	public String getAdditionalAcceptedPath()
 	{
 		return "/" + encodeIfNecessary(this.root.getName());
+	}
+	
+	/**
+	 * @return The listenerHandler that handles all http event listeners informed by this 
+	 * manager
+	 */
+	public HttpEventListenerHandler getHttpListenerHandler()
+	{
+		return this.listenerHandler;
 	}
 	
 	private String encodeIfNecessary(String s)

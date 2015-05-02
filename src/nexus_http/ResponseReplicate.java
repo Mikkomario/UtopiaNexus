@@ -31,16 +31,21 @@ public class ResponseReplicate
 	public ResponseReplicate(HttpResponse response)
 	{
 		this.code = response.getStatusLine().getStatusCode();
-		try
+		if (response.getEntity() != null)
 		{
-			ByteArrayOutputStream content = new ByteArrayOutputStream();
-			response.getEntity().writeTo(content);
-			this.content = content.toString();
+			try
+			{
+				ByteArrayOutputStream content = new ByteArrayOutputStream();
+				response.getEntity().writeTo(content);
+				this.content = content.toString();
+			}
+			catch (IOException e)
+			{
+				this.content = "Couldn't read the content";
+			}
 		}
-		catch (IOException e)
-		{
-			this.content = "Couldn't read the content";
-		}
+		else
+			this.content = "";
 	}
 	
 	

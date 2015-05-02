@@ -82,14 +82,7 @@ public class Request
 	@Override
 	public String toString()
 	{
-		String uri = new String();
-		for (String pathPart : this.path)
-		{
-			uri += "/" + pathPart;
-		}
-		uri += createParameterString(this.parameters);
-		
-		return uri;
+		return getMethod() + " " + getUriLine();
 	}
 	
 	
@@ -121,6 +114,21 @@ public class Request
 	
 	
 	// OTHER METHODS	-------------------------
+	
+	/**
+	 * @return The path and the parameters of the request in a single string
+	 */
+	public String getUriLine()
+	{
+		String uri = new String();
+		for (String pathPart : this.path)
+		{
+			uri += "/" + pathPart;
+		}
+		uri += createParameterString(this.parameters);
+		
+		return uri;
+	}
 	
 	/**
 	 * @return The names of the parameters used by this request
@@ -155,7 +163,7 @@ public class Request
 	 */
 	public HttpRequest toHttpRequest(boolean encode)
 	{
-		String uriLine = this.toString();
+		String uriLine = getUriLine();
 		
 		if (encode)
 		{

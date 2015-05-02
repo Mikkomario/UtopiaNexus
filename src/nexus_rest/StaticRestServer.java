@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import nexus_event.HttpEventListener;
 import nexus_http.Server;
 import nexus_test.TestRestEntity;
 
@@ -18,6 +19,7 @@ public class StaticRestServer
 	// ATTRIBUTES	---------------------------
 	
 	private static RestEntity root = null;
+	private static HttpEventListener eventListener = null;
 	
 	
 	// CONSTRUCTOR	---------------------------
@@ -52,6 +54,16 @@ public class StaticRestServer
 	}
 	
 	/**
+	 * Changes the HttpEventListener that will be added to the manager before it is started
+	 * @param l The listener that will be added to the informed listeners once the server 
+	 * starts
+	 */
+	public static void setEventListener(HttpEventListener l)
+	{
+		eventListener = l;
+	}
+	
+	/**
 	 * Starts the test server. Type in 'exit' to quit. The requests should be encoded in UTF-8
 	 * @param args The first parameter is the server ip, the second parameter is the port 
 	 * number (default = 7777), the third parameter defines if encoding is on (default = true)
@@ -77,6 +89,9 @@ public class StaticRestServer
 			root = new TestRestEntity("root", null);
 		
 		RestManager restManager = new RestManager(root, serverLink, encode);
+		if (eventListener != null)
+			restManager.getHttpListenerHandler().add(eventListener);
+		
 		server.addRequestHandler(restManager);
 		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());
 		server.start();

@@ -35,6 +35,7 @@ public class RestServerTest
 		
 		// Starts the server
 		StaticRestServer.setRootEntity(root);
+		StaticRestServer.setEventListener(new HttpServerAnalyzer());
 		StaticRestServer.startServer(args);
 	}
 }
