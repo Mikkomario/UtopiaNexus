@@ -2,22 +2,22 @@
 
 GET root
 
-#path:@href=POST root?name=test1
+#path:@href=POST root?name=1
 POST root?name=test2
 POST root?name=test3
-POST root/test1?name=test1.1
-POST root/test1?name=test1.2
+POST root/1?name=test1.1
+POST root/1?name=test1.2
 POST root/test2?name=test2.2
 
-PUT root/test1?value=1&testPath=#path
+PUT root/1?value=1&testPath=#path
 PUT root/test2?value=3
 PUT root/test2?value=2
-PUT root/test1/test1.1?value=11
+PUT root/1/test1.1?value=11
 
 GET root
-#value:value=GET root/test1
-GET root/test1/test1.1
-GET root/test1/test1.1/value
+#value:value=GET root/1
+GET root/1/test1.1
+GET root/1/test1.1/value
 GET root/*
 GET root/*?from=1&amount=#value
 GET root/test2

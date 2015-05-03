@@ -91,8 +91,8 @@ public class HttpServerAnalyzer implements HttpEventListener
 			System.out.println("---------------------------");
 			System.out.println("Request: " + this.lastRequest.toString());
 			System.out.println("Response status: " + e.getResponse().getStatusCode());
-			System.out.println("Response content length: " + 
-					e.getResponse().getContent().length());
+			//System.out.println("Response content length: " + 
+			//		e.getResponse().getContent().length());
 			System.out.println("Operation time: " + operationMillis + " ms");
 		}
 	}

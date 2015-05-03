@@ -43,8 +43,7 @@ public class FileReaderClientTest
 		if (args.length >= 4)
 			encode = Boolean.parseBoolean(args[3]);
 		
-		FileReaderClient client = new FileReaderClient("Test/1.1", args[1], port, 
-				encode);
+		FileReaderClient client = new FileReaderClient("Test/1.1", args[1], port, encode);
 		// Adds a client analyzer to print the data
 		new HttpClientAnalyzer(client.getListenerHandler());
 		

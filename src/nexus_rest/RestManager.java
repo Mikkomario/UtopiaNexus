@@ -111,7 +111,7 @@ public class RestManager implements RequestHandler
 					XMLIOAccessor.writeDocumentStart("result", writer);
 					XMLIOAccessor.writeXLinkNamespaceIntroduction(writer);
 					
-					writer.writeStartElement(newEntity.getName());
+					writer.writeStartElement(newEntity.getValidXmlName());
 					newEntity.writeLinkAsAttribute(this.serverLink, writer, 
 							parsedRequest.getParameters());
 					writer.writeEndElement();

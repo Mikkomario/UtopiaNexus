@@ -170,6 +170,14 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	// OTHER METHODS	----------------------------------
 	
 	/**
+	 * @return The entity's name that can be presented in the xml
+	 */
+	public String getValidXmlName()
+	{
+		return getValidXmlElementName(getName());
+	}
+	
+	/**
 	 * This method wraps the entities into an entityList. The subclasses may override this 
 	 * method if they wish to use a specific type of entityList
 	 * @param name The name of the list
@@ -332,7 +340,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			return;
 		
 		// Writes the entity element
-		writer.writeStartElement(getValidXmlElementName(getName()));
+		writer.writeStartElement(getValidXmlName());
 		writeLinkAsAttribute(serverLink, writer, parameters);
 		
 		// Writes the links
@@ -343,7 +351,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		// Writes the children
 		for (RestEntity child : getChildren())
 		{
-			writeEntityLink(getValidXmlElementName(child.getName()), child, serverLink, 
+			writeEntityLink(child.getValidXmlName(), child, serverLink, 
 					writer, parameters);
 		}
 		// Writes the attributes
