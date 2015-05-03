@@ -100,7 +100,7 @@ public abstract class RestEntityLinkList extends RestEntityList
 		// Writes a link to each entity in the list
 		for (RestEntity entity : getEntities())
 		{
-			writer.writeStartElement(entity.getName());
+			writer.writeStartElement(entity.getValidXmlName());
 			entity.writeLinkAsAttribute(serverLink, writer, parameters);
 			writer.writeEndElement();
 		}
