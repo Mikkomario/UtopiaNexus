@@ -45,6 +45,9 @@ public class FileReaderClientTest
 		
 		FileReaderClient client = new FileReaderClient("Test/1.1", args[1], port, 
 				encode);
+		// Adds a client analyzer to print the data
+		new HttpClientAnalyzer(client.getListenerHandler());
+		
 		try
 		{
 			client.readFile(args[0], "*");

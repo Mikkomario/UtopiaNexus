@@ -68,7 +68,8 @@ public class RestManager implements RequestHandler
 	{
 		Request parsedRequest = new Request(request, this.useEncoding);
 		
-		this.listenerHandler.onHttpEvent(new HttpEvent(parsedRequest, HttpEventType.RECEIVED));
+		this.listenerHandler.onHttpEvent(new HttpEvent(new Request(parsedRequest), 
+				HttpEventType.RECEIVED));
 		
 		ByteArrayOutputStream xml = null;
 		XMLStreamWriter writer = null;

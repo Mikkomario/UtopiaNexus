@@ -70,6 +70,22 @@ public class Request
 		this.parameters = new HashMap<>();
 	}
 	
+	/**
+	 * Creates a copy of another request
+	 * @param another The request that will be copied
+	 */
+	public Request(Request another)
+	{
+		this.method = another.method;
+		this.path = new String[another.path.length];
+		for (int i = 0; i < this.path.length; i++)
+		{
+			this.path[i] = another.path[i];
+		}
+		this.parameters = new HashMap<>();
+		this.parameters.putAll(another.parameters);
+	}
+	
 	private Request(MethodType method, String uriAndParameters, boolean encoded)
 	{
 		this.method = method;

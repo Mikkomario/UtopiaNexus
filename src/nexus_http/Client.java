@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Stack;
 
+import nexus_event.HttpEvent;
+import nexus_event.HttpEvent.HttpEventType;
+import nexus_event.HttpEventListenerHandler;
+
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -38,6 +42,7 @@ public class Client
 	private int hostPort;
 	private Stack<DefaultBHttpClientConnection> openConnections;
 	private boolean encode, reuse;
+	private HttpEventListenerHandler listenerHandler;
 	
 	
 	// CONSTRUCTOR	-------------------------------------------------------
@@ -59,7 +64,11 @@ public class Client
 		this.openConnections = new Stack<>();
 		this.encode = encodeRequests;
 		this.reuse = false;
+		this.listenerHandler = new HttpEventListenerHandler(false);
 	}
+	
+	
+	// OTHER METHODS	------------------------------
 
 	/**
 	 * Performs a request to the server. The connection is opened 
@@ -107,6 +116,7 @@ public class Client
 		
 		// Creates the request
 		HttpRequest httpRequest = request.toHttpRequest(this.encode);
+		getListenerHandler().onHttpEvent(new HttpEvent(request, HttpEventType.SENT));
 		
 		try
 		{
@@ -130,6 +140,7 @@ public class Client
 			else
 				this.reuse = true;
 			
+			getListenerHandler().onHttpEvent(new HttpEvent(replicate, HttpEventType.RECEIVED));
 			return replicate;
 		}
 		catch (NoHttpResponseException e)
@@ -150,6 +161,15 @@ public class Client
 		
 		closeLatesConnection();
 		return null;
+	}
+	
+	/**
+	 * @return The HttpEventListenerHandler that will inform listeners about events from this 
+	 * client
+	 */
+	public HttpEventListenerHandler getListenerHandler()
+	{
+		return this.listenerHandler;
 	}
 	
 	private void closeLatesConnection()

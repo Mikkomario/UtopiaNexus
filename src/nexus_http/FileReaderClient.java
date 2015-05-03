@@ -9,6 +9,8 @@ import java.util.Map;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import nexus_event.HttpEventListenerHandler;
+
 import org.apache.http.HttpStatus;
 
 import flow_io.AbstractFileReader;
@@ -64,21 +66,14 @@ public class FileReaderClient extends AbstractFileReader
 		if (this.failed)
 			return;
 		
-		System.out.println("---------------------------");
-		
 		// Parses the collected variables into the request if necessary
 		for (String idName : this.parsedVariables.keySet())
 		{
 			line = line.replaceAll(idName, this.parsedVariables.get(idName));
 		}
 		
-		// Prints the request
-		System.out.println(line);
-		
 		try
 		{
-			ResponseReplicate response = null;
-			
 			// If a line starts with '#' an element content or an attribute is parsed from the 
 			// response
 			if (line.startsWith("#"))
@@ -105,7 +100,7 @@ public class FileReaderClient extends AbstractFileReader
 					searchName = searchName.substring(1);
 				}
 				
-				response = this.client.sendRequest(Request.parseFromString(
+				ResponseReplicate response = this.client.sendRequest(Request.parseFromString(
 						line.substring(varEndsAt + 1)));
 				
 				if (response.getStatusCode() == HttpStatus.SC_OK)
@@ -133,11 +128,7 @@ public class FileReaderClient extends AbstractFileReader
 				}
 			}
 			else
-				response = this.client.sendRequest(Request.parseFromString(line));
-			
-			// Prints the response
-			System.out.println(response.getStatusCode());
-			System.out.println(response.getContent());
+				this.client.sendRequest(Request.parseFromString(line));
 		}
 		catch (NoConnectionException e)
 		{
@@ -169,6 +160,14 @@ public class FileReaderClient extends AbstractFileReader
 	
 	// OTHER METHODS	------------------------------------------
 
+	/**
+	 * @return The listenerHandler that will inform the listeners about the http events
+	 */
+	public HttpEventListenerHandler getListenerHandler()
+	{
+		return this.client.getListenerHandler();
+	}
+	
 	/**
 	 * Closes the connections between the client and the server
 	 */

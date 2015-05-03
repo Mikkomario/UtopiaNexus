@@ -2,12 +2,10 @@ package nexus_test;
 
 import genesis_event.EventSelector;
 import genesis_event.HandlerRelay;
-import genesis_event.StrictEventSelector;
 import genesis_util.LatchStateOperator;
 import genesis_util.StateOperator;
 import nexus_event.HttpEvent;
 import nexus_event.HttpEvent.HttpEventSourceType;
-import nexus_event.HttpEvent.HttpEventType;
 import nexus_event.HttpEventListener;
 import nexus_event.HttpEventListenerHandler;
 import nexus_http.Request;
@@ -82,14 +80,12 @@ public class HttpServerAnalyzer implements HttpEventListener
 	@Override
 	public void onHttpEvent(HttpEvent e)
 	{
-		if (e.getEventType() == HttpEventType.RECEIVED && 
-				e.getSourceType() == HttpEventSourceType.REQUEST)
+		if (e.getSourceType() == HttpEventSourceType.REQUEST)
 		{
 			this.lastRequest = e.getRequest();
 			this.requestReceivedMillis = System.currentTimeMillis();
 		}
-		else if (e.getEventType() == HttpEventType.SENT && 
-				e.getSourceType() == HttpEventSourceType.RESPONSE)
+		else
 		{
 			long operationMillis = System.currentTimeMillis() - this.requestReceivedMillis;
 			System.out.println("---------------------------");
@@ -110,6 +106,6 @@ public class HttpServerAnalyzer implements HttpEventListener
 		this.lastRequest = null;
 		this.isDeadOperator = new LatchStateOperator(false);
 		this.listensOperator = new StateOperator(true, true);
-		this.eventSelector = new StrictEventSelector<>();
+		this.eventSelector = HttpEvent.getServerEventSelector();
 	}
 }

@@ -30,6 +30,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	private String name, id;
 	private Map<String, RestEntity> links;
 	
+	private static final String CHILDINDICATOR = "child";
+	
 	
 	// CONSTRUCTOR	--------------------------------
 	
@@ -123,7 +125,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	{
 		// This may also be used for adding a child entity, in which case the name starts 
 		// with "child"
-		if (linkName.startsWith("child"))
+		if (linkName.startsWith(CHILDINDICATOR))
 			addChild(target);
 		else
 			this.links.put(linkName, target);
@@ -147,7 +149,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		
 		for (RestEntity child : getChildren())
 		{
-			links.put("child" + child.getName(), child);
+			links.put(CHILDINDICATOR + child.getName(), child);
 		}
 		
 		return links;
@@ -239,6 +241,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 */
 	public String getPath()
 	{
+		// TODO: Make a separate directory separator attribute somewhere
 		if (getParent() == null)
 			return getName();
 		else
@@ -329,7 +332,7 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			return;
 		
 		// Writes the entity element
-		writer.writeStartElement(getName());
+		writer.writeStartElement(getValidXmlElementName(getName()));
 		writeLinkAsAttribute(serverLink, writer, parameters);
 		
 		// Writes the links
@@ -340,7 +343,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		// Writes the children
 		for (RestEntity child : getChildren())
 		{
-			writeEntityLink(child.getName(), child, serverLink, writer, parameters);
+			writeEntityLink(getValidXmlElementName(child.getName()), child, serverLink, 
+					writer, parameters);
 		}
 		// Writes the attributes
 		Map<String, String> attributes = getAttributes();
@@ -356,8 +360,8 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		{
 			for (String entityName : missingEntities.keySet())
 			{
-				writeEntityLink(entityName, missingEntities.get(entityName), serverLink, 
-						writer, parameters);
+				writeEntityLink(getValidXmlElementName(entityName), 
+						missingEntities.get(entityName), serverLink, writer, parameters);
 			}
 		}
 		
@@ -446,5 +450,15 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		writer.writeStartElement(linkName);
 		entity.writeLinkAsAttribute(serverLink, writer, parameters);
 		writer.writeEndElement();
+	}
+	
+	private static String getValidXmlElementName(String elementName)
+	{
+		if (elementName == null)
+			return "null";
+		if (Character.isDigit(elementName.charAt(0)))
+			return "_" + elementName;
+		
+		return elementName;
 	}
 }
