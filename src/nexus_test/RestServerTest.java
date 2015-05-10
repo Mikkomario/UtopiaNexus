@@ -1,5 +1,6 @@
 package nexus_test;
 
+import nexus_rest.ContentType;
 import nexus_rest.RestEntity;
 import nexus_rest.StaticRestServer;
 
@@ -30,12 +31,16 @@ public class RestServerTest
 			System.exit(0);
 		}
 		
+		String ip = args[0];
+		int port = 7777;
+		if (args.length > 1)
+			port = Integer.parseInt(args[1]);
+		
 		// Creates the server entities
 		RestEntity root = new TestRestEntity("root", null);
 		
 		// Starts the server
-		StaticRestServer.setRootEntity(root);
-		StaticRestServer.setEventListener(new HttpServerAnalyzer());
-		StaticRestServer.startServer(args);
+		StaticRestServer.startServer(ip, port, true, ContentType.JSON, root, 
+				new HttpServerAnalyzer());
 	}
 }

@@ -30,7 +30,7 @@ public class TestClient
 	 */
 	public static void main(String[] args)
 	{
-		String address = "192.168.0.15";
+		String address = "10.100.15.106";
 		int port = 7777;
 		
 		if (args.length > 0)

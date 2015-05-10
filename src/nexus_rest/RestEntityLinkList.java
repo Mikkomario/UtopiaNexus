@@ -1,10 +1,13 @@
 package nexus_rest;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import nexus_http.HttpException;
 import nexus_http.MethodNotSupportedException;
@@ -92,17 +95,20 @@ public abstract class RestEntityLinkList extends RestEntityList
 	}
 	
 	@Override
-	public void writeContent(String serverLink, XMLStreamWriter writer, 
-			Map<String, String> parameters) throws XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter xmlWriter, 
+			JsonGenerator jsonWriter, ContentType contentType, Map<String, String> parameters) 
+			throws XMLStreamException, HttpException, IOException
 	{
 		trimIfNecessary(parameters);
 		
 		// Writes a link to each entity in the list
 		for (RestEntity entity : getEntities())
 		{
-			writer.writeStartElement(entity.getValidXmlName());
-			entity.writeLinkAsAttribute(serverLink, writer, parameters);
-			writer.writeEndElement();
+			if (contentType == ContentType.XML)
+				writeEntityLink(entity.getValidXmlName(), entity, serverLink, xmlWriter, 
+						parameters);
+			else
+				writeEntityLink(entity.getName(), entity, serverLink, jsonWriter);
 		}
 	}
 }

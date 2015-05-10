@@ -1,10 +1,13 @@
 package nexus_rest;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import flow_io.XMLIOAccessor;
 import nexus_http.HttpException;
@@ -51,11 +54,17 @@ public class RestAttributeWrapper extends TemporaryRestEntity
 	// IMPLEMENTED METHODS	-----------------------
 	
 	@Override
-	public void writeContent(String serverLink, XMLStreamWriter writer, 
-			Map<String, String> parameters) throws XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter xmlWriter, 
+			JsonGenerator jsonWriter, ContentType contentType, Map<String, String> parameters) 
+			throws XMLStreamException, HttpException, IOException
 	{
 		if (this.value != null)
-			XMLIOAccessor.writeElementWithData(getName(), this.value, writer);
+		{
+			if (contentType == ContentType.XML)
+				XMLIOAccessor.writeElementWithData(getName(), this.value, xmlWriter);
+			else
+				jsonWriter.writeStringField(getName(), this.value);
+		}
 	}
 	
 	@Override

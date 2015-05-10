@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 
 import nexus_event.HttpEventListener;
 import nexus_http.Server;
-import nexus_test.TestRestEntity;
 
 /**
  * This class hosts a test server that contains rest entities
@@ -15,82 +14,33 @@ import nexus_test.TestRestEntity;
  * @since 19.1.2015
  */
 public class StaticRestServer
-{
-	// ATTRIBUTES	---------------------------
-	
-	private static RestEntity root = null;
-	private static HttpEventListener eventListener = null;
-	
-	
+{	
 	// CONSTRUCTOR	---------------------------
 	
 	private StaticRestServer()
 	{
 		// The constructor is hidden since the interface is static
 	}
-
-	
-	// MAIN METHOD	---------------------------
-	
-	/**
-	 * Starts the test server. Type in 'exit' to quit
-	 * @param args The first parameter is the server ip. The second parameter is the port number default is 7777)
-	 */
-	public static void main(String[] args)
-	{
-		startServer(args);
-	}
-	
-	
-	// OTHER METHODS	----------------------------
-	
-	/**
-	 * Sets the root element to the manager before it is created
-	 * @param newRoot The root that will be used in the tests
-	 */
-	public static void setRootEntity(RestEntity newRoot)
-	{
-		root = newRoot;
-	}
-	
-	/**
-	 * Changes the HttpEventListener that will be added to the manager before it is started
-	 * @param l The listener that will be added to the informed listeners once the server 
-	 * starts
-	 */
-	public static void setEventListener(HttpEventListener l)
-	{
-		eventListener = l;
-	}
 	
 	/**
 	 * Starts the test server. Type in 'exit' to quit. The requests should be encoded in UTF-8
-	 * @param args The first parameter is the server ip, the second parameter is the port 
-	 * number (default = 7777), the third parameter defines if encoding is on (default = true)
+	 * @param serverIP The ip of the server
+	 * @param port The port number the server uses
+	 * @param encode Does the server expect encoded requests
+	 * @param defaultContentType Which content type is used by default
+	 * @param root The root element of the server
+	 * @param listener The listener(s) that will be informed about http events (optional)
 	 */
-	public static void startServer(String[] args)
+	public static void startServer(String serverIP, int port, boolean encode, 
+			ContentType defaultContentType, RestEntity root, HttpEventListener listener)
 	{
 		// TODO: Create a new thread for this?
-		String address = "82.130.11.90";
-		int port = 7777;
-		boolean encode = true;
-		
-		if (args.length > 0)
-			address = args[0];
-		if (args.length > 1)
-			port = Integer.parseInt(args[1]);
-		if (args.length > 2)
-			encode = Boolean.parseBoolean(args[2]);
-		
-		String serverLink = "http://" + address + ":" + port + "/";
+		String serverLink = "http://" + serverIP + ":" + port + "/";
 		
 		Server server = new Server(port);
-		if (root == null)
-			root = new TestRestEntity("root", null);
-		
-		RestManager restManager = new RestManager(root, serverLink, encode);
-		if (eventListener != null)
-			restManager.getHttpListenerHandler().add(eventListener);
+		RestManager restManager = new RestManager(root, serverLink, encode, defaultContentType);
+		if (listener != null)
+			restManager.getHttpListenerHandler().add(listener);
 		
 		server.addRequestHandler(restManager);
 		server.addRequestHandler(restManager, restManager.getAdditionalAcceptedPath());

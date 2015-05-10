@@ -1,5 +1,6 @@
 package nexus_rest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.Map;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import nexus_http.HttpException;
 import nexus_http.InvalidParametersException;
@@ -128,15 +131,16 @@ public abstract class RestEntityList extends TemporaryRestEntity
 	}
 	
 	@Override
-	public void writeContent(String serverLink, XMLStreamWriter writer, 
-			Map<String, String> parameters) throws XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter xmlWriter, 
+			JsonGenerator jsonWriter, ContentType contentType, Map<String, String> parameters) 
+			throws XMLStreamException, HttpException, IOException
 	{
 		trimIfNecessary(parameters);
 		
 		// Writes the content of each entity in row
 		for (RestEntity entity : getEntities())
 		{
-			entity.writeContent(serverLink, writer, parameters);
+			entity.writeContent(serverLink, xmlWriter, jsonWriter, contentType, parameters);
 		}
 	}
 	

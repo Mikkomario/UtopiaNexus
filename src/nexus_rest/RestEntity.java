@@ -1,5 +1,6 @@
 package nexus_rest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.fasterxml.jackson.core.JsonGenerator;
 
 import nexus_http.HttpException;
 import flow_io.XMLIOAccessor;
@@ -324,15 +327,19 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 	 * Writes the entity content as xml data
 	 * @param serverLink The server part of the link, containing the server address, the port 
 	 * number and the first "/"
-	 * @param writer The writer that will write the object's data
+	 * @param xmlWriter The writer that writes xml (only required if contentType is xml)
+	 * @param jsonWriter The writer that writes json (only required if contentType is json)
+	 * @param contentType In which form the entity's content should be written
 	 * @param parameters The parameters provided by the client. "linkType" parameter affects 
 	 * how the links will be written. "noContent=true" makes it so that the entity won't be 
 	 * written at all
 	 * @throws XMLStreamException If the writing failed
 	 * @throws HttpException If there was another problem during the write
+	 * @throws IOException If the json data couldn't be written
 	 */
-	public void writeContent(String serverLink, XMLStreamWriter writer, 
-			Map<String, String> parameters) throws XMLStreamException, HttpException
+	public void writeContent(String serverLink, XMLStreamWriter xmlWriter, 
+			JsonGenerator jsonWriter, ContentType contentType, Map<String, String> parameters) 
+			throws XMLStreamException, HttpException, IOException
 	{
 		// If the parameter 'noContent' is present, doesn't write anything
 		if (parameters.containsKey("noContent") && 
@@ -340,26 +347,41 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 			return;
 		
 		// Writes the entity element
-		writer.writeStartElement(getValidXmlName());
-		writeLinkAsAttribute(serverLink, writer, parameters);
+		if (contentType == ContentType.XML)
+		{
+			xmlWriter.writeStartElement(getValidXmlName());
+			writeLinkAsAttribute(serverLink, xmlWriter, parameters);
+		}
+		else
+			jsonWriter.writeObjectFieldStart(getName());
 		
 		// Writes the links
 		for (String link : getlinkNames())
 		{
-			writeEntityLink(link, getLinkedEntity(link), serverLink, writer, parameters);
+			if (contentType == ContentType.XML)
+				writeEntityLink(link, getLinkedEntity(link), serverLink, xmlWriter, 
+						parameters);
+			else
+				writeEntityLink(link, getLinkedEntity(link), serverLink, jsonWriter);
 		}
 		// Writes the children
 		for (RestEntity child : getChildren())
 		{
-			writeEntityLink(child.getValidXmlName(), child, serverLink, 
-					writer, parameters);
+			if (contentType == ContentType.XML)
+				writeEntityLink(child.getValidXmlName(), child, serverLink, xmlWriter, 
+						parameters);
+			else
+				writeEntityLink(child.getName(), child, serverLink, jsonWriter);
 		}
 		// Writes the attributes
 		Map<String, String> attributes = getAttributes();
 		for (String attributeName : attributes.keySet())
 		{
-			XMLIOAccessor.writeElementWithData(attributeName, attributes.get(attributeName), 
-					writer);
+			if (contentType == ContentType.XML)
+				XMLIOAccessor.writeElementWithData(attributeName, 
+						attributes.get(attributeName), xmlWriter);
+			else
+				jsonWriter.writeStringField(attributeName, attributes.get(attributeName));
 		}
 		
 		// Writes the missing entities
@@ -368,36 +390,44 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		{
 			for (String entityName : missingEntities.keySet())
 			{
-				writeEntityLink(getValidXmlElementName(entityName), 
-						missingEntities.get(entityName), serverLink, writer, parameters);
+				if (contentType == ContentType.XML)
+					writeEntityLink(getValidXmlElementName(entityName), 
+							missingEntities.get(entityName), serverLink, xmlWriter, parameters);
+				else
+					writeEntityLink(entityName, missingEntities.get(entityName), serverLink, 
+							jsonWriter);
 			}
 		}
 		
-		writer.writeEndElement();
+		if (contentType == ContentType.XML)
+			xmlWriter.writeEndElement();
+		else
+			jsonWriter.writeEndObject();
 	}
 	
 	/**
 	 * Writes a link to the entity as an attribute for the currently open element in the stream
 	 * @param serverLink The server part of the link, containing the server address, the port 
 	 * number and the first "/"
-	 * @param writer The writer that will write the attribute into the stream
+	 * @param xmlWriter The writer that is capable of writing xml data
 	 * @param parameters The parameters provided by the client. The parameter 'linkType' 
 	 * affects how the links are written. 'simple' means that only the path is written. 
 	 * 'none' means that links won't be written at all. Any other value means that full links 
 	 * will be written
 	 * @throws XMLStreamException If the attribute couldn't be written into the stream
 	 */
-	public void writeLinkAsAttribute(String serverLink, XMLStreamWriter writer, 
+	public void writeLinkAsAttribute(String serverLink, XMLStreamWriter xmlWriter,  
 			Map<String, String> parameters) throws XMLStreamException
 	{
 		String linkType = parameters.get("linkType");
+		String link = null;
 		
-		if (linkType == null)
-			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer, false);
-		else if (linkType.equalsIgnoreCase("simple"))
-			XMLIOAccessor.writeLinkAsAttribute(getPath(), writer, false);
-		else if (!linkType.equalsIgnoreCase("none"))
-			XMLIOAccessor.writeLinkAsAttribute(serverLink + getPath(), writer, false);
+		if ("simple".equalsIgnoreCase(linkType))
+			link = getPath();
+		else if (!"none".equalsIgnoreCase(linkType))
+			link = serverLink + getPath();
+			
+		XMLIOAccessor.writeLinkAsAttribute(link, xmlWriter, false);
 	}
 	
 	/**
@@ -452,12 +482,35 @@ public abstract class RestEntity extends TreeNode<RestData> implements
 		return entities;
 	}
 	
-	private static void writeEntityLink(String linkName, RestEntity entity, String serverLink, 
+	/**
+	 * Writes a link to an entity in xml
+	 * @param linkName The name of the link
+	 * @param entity The entity being linked to
+	 * @param serverLink The server part of the link
+	 * @param writer The writer that will write the link
+	 * @param parameters The parameters provided by the client
+	 * @throws XMLStreamException If the write failed
+	 */
+	protected static void writeEntityLink(String linkName, RestEntity entity, String serverLink, 
 			XMLStreamWriter writer, Map<String, String> parameters) throws XMLStreamException
 	{
 		writer.writeStartElement(linkName);
 		entity.writeLinkAsAttribute(serverLink, writer, parameters);
 		writer.writeEndElement();
+	}
+	
+	/**
+	 * Writes a link to an entity in json
+	 * @param linkName The name of the link
+	 * @param entity The entity being linked to
+	 * @param serverLink The server part of the link
+	 * @param writer The writer that will write the link
+	 * @throws IOException If the write failed
+	 */
+	protected static void writeEntityLink(String linkName, RestEntity entity, String serverLink, 
+			JsonGenerator writer) throws IOException
+	{
+		writer.writeStringField(linkName, serverLink + entity.getPath());
 	}
 	
 	private static String getValidXmlElementName(String elementName)
