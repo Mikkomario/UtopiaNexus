@@ -40,7 +40,7 @@ public class RestServerTest
 		RestEntity root = new TestRestEntity("root", null);
 		
 		// Starts the server
-		StaticRestServer.startServer(ip, port, true, ContentType.JSON, root, 
+		StaticRestServer.startServer(ip, port, true, ContentType.XML, root, 
 				new HttpServerAnalyzer());
 	}
 }

@@ -266,8 +266,8 @@ public class RestManager implements RequestHandler
 	{
 		if (contentType == ContentType.XML)
 		{
-			XMLIOAccessor.writeDocumentStart("result", xmlWriter);
-			XMLIOAccessor.writeXLinkNamespaceIntroduction(xmlWriter);
+			//xmlWriter.writeEndElement();
+			XMLIOAccessor.writeDocumentEnd(xmlWriter);
 		}
 		else
 			jsonWriter.writeEndObject();
