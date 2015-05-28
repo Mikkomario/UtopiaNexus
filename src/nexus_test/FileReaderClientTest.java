@@ -49,18 +49,36 @@ public class FileReaderClientTest
 		if (args.length >= 5)
 			encode = Boolean.parseBoolean(args[4]);
 		
-		FileReaderClient client = new FileReaderClient("Test/1.1", args[1], port, encode, 
+		run(args[0], args[1], port, contentType, encode);
+	}
+	
+	
+	// OTHER METHODS	------------------------------
+	
+	/**
+	 * Runs the test
+	 * @param testFileName The file that contains the test instructions 
+	 * (data/ automatically included)
+	 * @param ip The server ip
+	 * @param port The server port
+	 * @param contentType The content type used by the server
+	 * @param encode Does the server use encoding
+	 */
+	public static void run(String testFileName, String ip, int port, ContentType contentType, 
+			boolean encode)
+	{
+		FileReaderClient client = new FileReaderClient("Test/1.1", ip, port, encode, 
 				contentType);
 		// Adds a client analyzer to print the data
 		new HttpClientAnalyzer(client.getListenerHandler());
 		
 		try
 		{
-			client.readFile(args[0], "*");
+			client.readFile(testFileName, "*");
 		}
 		catch (FileNotFoundException e)
 		{
-			System.err.println("Couldn't find a file from " + args[0]);
+			System.err.println("Couldn't find a file from " + testFileName);
 		}
 	}
 }
