@@ -164,6 +164,16 @@ public class Request
 	}
 	
 	/**
+	 * Changes a value in the parameters or adds a new parameter
+	 * @param parameterName The name of the modified parameter
+	 * @param parameterValue The new value given to the parameter
+	 */
+	public void setParameter(String parameterName, String parameterValue)
+	{
+		getParameters().put(parameterName, parameterValue);
+	}
+	
+	/**
 	 * @param parameterName The name of the parameter
 	 * @return Does this request contain a parameter with the given name
 	 */

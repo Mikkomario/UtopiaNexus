@@ -2,6 +2,7 @@ package nexus_http;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +11,15 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
 import nexus_event.HttpEventListenerHandler;
+import nexus_rest.ContentType;
 
 import org.apache.http.HttpStatus;
+
+import tempest_io.JsonIOAccessor;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 
 import flow_io.AbstractFileReader;
 import flow_io.XMLIOAccessor;
@@ -37,6 +45,7 @@ public class FileReaderClient extends AbstractFileReader
 	private Map<String, String> parsedVariables;
 	private Client client;
 	private boolean failed;
+	private ContentType serverContentType;
 	
 	
 	// CONSTRUCTOR	-------------------------------------
@@ -47,13 +56,15 @@ public class FileReaderClient extends AbstractFileReader
 	 * @param hostAddress The host address
 	 * @param hostPort The host port
 	 * @param encodeRequests Should the requests be encoded in UTF-8
+	 * @param serverContentType The default content type of the server
 	 */
 	public FileReaderClient(String userAgent, String hostAddress, int hostPort, 
-			boolean encodeRequests)
+			boolean encodeRequests, ContentType serverContentType)
 	{
 		this.parsedVariables = new HashMap<>();
 		this.client = new Client(userAgent, hostAddress, hostPort, encodeRequests);
 		this.failed = false;
+		this.serverContentType = serverContentType;
 	}
 	
 	
@@ -100,15 +111,19 @@ public class FileReaderClient extends AbstractFileReader
 					searchName = searchName.substring(1);
 				}
 				
-				ResponseReplicate response = this.client.sendRequest(Request.parseFromString(
-						line.substring(varEndsAt + 1)));
+				Request request = Request.parseFromString(line.substring(varEndsAt + 1));
+				// Attributes can't be parsed from json so xml is requested instead
+				if (searchAttribute)
+					request.setParameter("contentType", ContentType.XML.toString());
+				
+				ResponseReplicate response = this.client.sendRequest(request);
 				
 				if (response.getStatusCode() == HttpStatus.SC_OK)
 				{
 					try
 					{
 						String parsedValue = parseVariableFromResponse(response, 
-								searchName, searchAttribute);
+								searchName, searchAttribute, this.serverContentType);
 						
 						if (parsedValue == null)
 							System.err.println("Couldn't find " + searchName + 
@@ -116,10 +131,11 @@ public class FileReaderClient extends AbstractFileReader
 						else
 						{
 							this.parsedVariables.put(varName, parsedValue);
-							System.out.println("Parsed variable: " + varName + " = " + parsedValue);
+							System.out.println("Parsed variable: " + varName + " = " + 
+									parsedValue);
 						}
 					}
-					catch (UnsupportedEncodingException | XMLStreamException e)
+					catch (XMLStreamException | IOException e)
 					{
 						System.err.println("Couldn't read " + searchName + 
 								" from the response");
@@ -177,6 +193,16 @@ public class FileReaderClient extends AbstractFileReader
 	}
 	
 	private static String parseVariableFromResponse(ResponseReplicate response, 
+			String contentName, boolean contentIsAttribute, ContentType contentType) throws 
+			XMLStreamException, JsonParseException, IOException
+	{
+		if (contentIsAttribute || contentType == ContentType.XML)
+			return parseVariableFromXmlResponse(response, contentName, contentIsAttribute);
+		else
+			return parseVariableFromJsonResponse(response, contentName);
+	}
+	
+	private static String parseVariableFromXmlResponse(ResponseReplicate response, 
 			String contentName, boolean contentIsAttribute) throws 
 			UnsupportedEncodingException, XMLStreamException
 	{
@@ -207,6 +233,36 @@ public class FileReaderClient extends AbstractFileReader
 		finally
 		{
 			XMLIOAccessor.closeReader(reader);
+		}
+		
+		return null;
+	}
+	
+	@SuppressWarnings("resource")
+	private static String parseVariableFromJsonResponse(ResponseReplicate response, 
+			String contentName) throws JsonParseException, IOException
+	{
+		JsonParser reader = null;
+		
+		try
+		{
+			reader = JsonIOAccessor.createReader(
+					new ByteArrayInputStream(response.getContent().getBytes()));
+			JsonToken token = reader.nextToken();
+			while (token != null)
+			{
+				if (token == JsonToken.FIELD_NAME && contentName.equals(reader.getCurrentName()))
+				{
+					token = reader.nextValue();
+					return reader.getValueAsString();
+				}
+				
+				token = reader.nextToken();
+			}
+		}
+		finally
+		{
+			JsonIOAccessor.closeReader(reader);
 		}
 		
 		return null;
