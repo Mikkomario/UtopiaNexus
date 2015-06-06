@@ -123,19 +123,12 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 			super(true);
 		}
 		
-		
 		// IMPLEMENTED METHODS	---------------
 
 		@Override
-		protected void changeHandledState(HttpEventListener listener, boolean newState)
+		protected StateOperator getHandledStateOperator(HttpEventListener h)
 		{
-			listener.getListensToHttpEventsOperator().setState(newState);
-		}
-
-		@Override
-		protected boolean getHandledState(HttpEventListener listener)
-		{
-			return listener.getListensToHttpEventsOperator().getState();
-		}
+			return h.getListensToHttpEventsOperator();
+		}	
 	}
 }
