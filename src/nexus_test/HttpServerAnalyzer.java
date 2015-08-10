@@ -2,8 +2,7 @@ package nexus_test;
 
 import genesis_event.EventSelector;
 import genesis_event.HandlerRelay;
-import genesis_util.LatchStateOperator;
-import genesis_util.StateOperator;
+import genesis_util.SimpleHandled;
 import nexus_event.HttpEvent;
 import nexus_event.HttpEvent.HttpEventSourceType;
 import nexus_event.HttpEventListener;
@@ -15,13 +14,12 @@ import nexus_http.Request;
  * @author Mikko Hilpinen
  * @since 2.5.2015
  */
-public class HttpServerAnalyzer implements HttpEventListener
+public class HttpServerAnalyzer extends SimpleHandled implements HttpEventListener
 {
 	// ATTRIBUTES	-------------------------
 	
 	private long requestReceivedMillis;
 	private Request lastRequest;
-	private StateOperator isDeadOperator, listensOperator;
 	private EventSelector<HttpEvent> eventSelector;
 	
 	
@@ -33,6 +31,7 @@ public class HttpServerAnalyzer implements HttpEventListener
 	 */
 	public HttpServerAnalyzer(HttpEventListenerHandler handler)
 	{
+		super(null);
 		initialize();
 		handler.add(this);
 	}
@@ -43,8 +42,8 @@ public class HttpServerAnalyzer implements HttpEventListener
 	 */
 	public HttpServerAnalyzer(HandlerRelay handlers)
 	{
+		super(handlers);
 		initialize();
-		handlers.addHandled(this);
 	}
 	
 	/**
@@ -53,23 +52,12 @@ public class HttpServerAnalyzer implements HttpEventListener
 	 */
 	public HttpServerAnalyzer()
 	{
+		super(null);
 		initialize();
 	}
 	
 	
 	// IMPLEMENTED METHODS	--------------------------
-
-	@Override
-	public StateOperator getIsDeadStateOperator()
-	{
-		return this.isDeadOperator;
-	}
-
-	@Override
-	public StateOperator getListensToHttpEventsOperator()
-	{
-		return this.listensOperator;
-	}
 
 	@Override
 	public EventSelector<HttpEvent> getHttpEventSelector()
@@ -103,8 +91,6 @@ public class HttpServerAnalyzer implements HttpEventListener
 	{
 		this.requestReceivedMillis = 0;
 		this.lastRequest = null;
-		this.isDeadOperator = new LatchStateOperator(false);
-		this.listensOperator = new StateOperator(true, true);
 		this.eventSelector = HttpEvent.getServerEventSelector();
 	}
 }

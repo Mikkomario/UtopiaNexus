@@ -2,7 +2,6 @@ package nexus_event;
 
 import genesis_event.EventSelector;
 import genesis_event.Handled;
-import genesis_util.StateOperator;
 
 /**
  * HttpEventListeners are interested in http events
@@ -11,12 +10,6 @@ import genesis_util.StateOperator;
  */
 public interface HttpEventListener extends Handled
 {
-	/**
-	 * @return The stateOperator that defines whether the listener is currently interested in 
-	 * receiving events or not
-	 */
-	public StateOperator getListensToHttpEventsOperator();
-	
 	/**
 	 * @return The eventSelector that defines which events the listener will be informed about
 	 */

@@ -5,7 +5,6 @@ import genesis_event.Handler;
 import genesis_event.HandlerRelay;
 import genesis_event.HandlerType;
 import genesis_event.StrictEventSelector;
-import genesis_util.StateOperator;
 
 /**
  * These handlers inform multiple HttpEventListeners about http events
@@ -16,8 +15,7 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 		HttpEventListener
 {
 	// ATTRIBUTES	----------------------------
-	
-	private StateOperator listensToEventsOperator;
+
 	private EventSelector<HttpEvent> eventSelector;
 	private HttpEvent lastEvent;
 	
@@ -66,12 +64,6 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 	// IMPLEMENTED METHODS	----------------------
 
 	@Override
-	public StateOperator getListensToHttpEventsOperator()
-	{
-		return this.listensToEventsOperator;
-	}
-
-	@Override
 	public EventSelector<HttpEvent> getHttpEventSelector()
 	{
 		return this.eventSelector;
@@ -82,7 +74,7 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 	{
 		// Informs the listeners that are interested
 		this.lastEvent = e;
-		handleObjects();
+		handleObjects(true);
 	}
 
 	@Override
@@ -95,8 +87,7 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 	protected boolean handleObject(HttpEventListener l)
 	{
 		// Informs only objects that are interested
-		if (l.getListensToHttpEventsOperator().getState() && 
-				l.getHttpEventSelector().selects(this.lastEvent))
+		if (l.getHttpEventSelector().selects(this.lastEvent))
 			l.onHttpEvent(this.lastEvent);
 		
 		return true;
@@ -107,28 +98,6 @@ public class HttpEventListenerHandler extends Handler<HttpEventListener> impleme
 	
 	private void initialize()
 	{
-		this.listensToEventsOperator = new AnyHandledListensEventsOperator();
 		this.eventSelector = new StrictEventSelector<>();
-	}
-	
-	
-	// SUBCLASSES	---------------------------
-	
-	private class AnyHandledListensEventsOperator extends ForAnyHandledsOperator
-	{
-		// CONSTRUCTOR	-----------------------
-		
-		public AnyHandledListensEventsOperator()
-		{
-			super(true);
-		}
-		
-		// IMPLEMENTED METHODS	---------------
-
-		@Override
-		protected StateOperator getHandledStateOperator(HttpEventListener h)
-		{
-			return h.getListensToHttpEventsOperator();
-		}	
 	}
 }

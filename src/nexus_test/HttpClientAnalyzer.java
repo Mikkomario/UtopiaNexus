@@ -2,8 +2,7 @@ package nexus_test;
 
 import genesis_event.EventSelector;
 import genesis_event.HandlerRelay;
-import genesis_util.LatchStateOperator;
-import genesis_util.StateOperator;
+import genesis_util.SimpleHandled;
 import nexus_event.HttpEvent;
 import nexus_event.HttpEvent.HttpEventSourceType;
 import nexus_event.HttpEventListener;
@@ -14,12 +13,11 @@ import nexus_event.HttpEventListenerHandler;
  * @author Mikko Hilpinen
  * @since 3.5.2015
  */
-public class HttpClientAnalyzer implements HttpEventListener
+public class HttpClientAnalyzer extends SimpleHandled implements HttpEventListener
 {
 	// ATTRIBUTES	---------------------------
 	
 	private long requestSentMillis;
-	private StateOperator isDeadOperator, listensOperator;
 	private EventSelector<HttpEvent> eventSelector;
 	
 	
@@ -30,6 +28,7 @@ public class HttpClientAnalyzer implements HttpEventListener
 	 */
 	public HttpClientAnalyzer()
 	{
+		super(null);
 		initialize();
 	}
 	
@@ -39,9 +38,8 @@ public class HttpClientAnalyzer implements HttpEventListener
 	 */
 	public HttpClientAnalyzer(HandlerRelay handlers)
 	{
+		super(handlers);
 		initialize();
-		
-		handlers.addHandled(this);
 	}
 	
 	/**
@@ -50,6 +48,7 @@ public class HttpClientAnalyzer implements HttpEventListener
 	 */
 	public HttpClientAnalyzer(HttpEventListenerHandler handler)
 	{
+		super(null);
 		initialize();
 		
 		handler.add(this);
@@ -57,18 +56,6 @@ public class HttpClientAnalyzer implements HttpEventListener
 	
 	
 	// IMPLEMENTED METHODS	-----------------------
-
-	@Override
-	public StateOperator getIsDeadStateOperator()
-	{
-		return this.isDeadOperator;
-	}
-
-	@Override
-	public StateOperator getListensToHttpEventsOperator()
-	{
-		return this.listensOperator;
-	}
 
 	@Override
 	public EventSelector<HttpEvent> getHttpEventSelector()
@@ -101,8 +88,6 @@ public class HttpClientAnalyzer implements HttpEventListener
 	private void initialize()
 	{
 		this.requestSentMillis = 0;
-		this.isDeadOperator = new LatchStateOperator(false);
-		this.listensOperator = new StateOperator(true, true);
 		this.eventSelector = HttpEvent.getClientEventSelector();
 	}
 }
